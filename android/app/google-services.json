@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "834634966664",
+    "project_id": "gogoship-70cca",
+    "storage_bucket": "gogoship-70cca.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834634966664:android:f3c99e035c2bd1c428613d",
+        "android_client_info": {
+          "package_name": "com.example.gogocustomer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHAsAkC7S4NEqV54xv5GQc1cyoNs4JkI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:834634966664:android:a0226baa35c6d82528613d",
+        "android_client_info": {
+          "package_name": "com.example.gogoship"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHAsAkC7S4NEqV54xv5GQc1cyoNs4JkI8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
