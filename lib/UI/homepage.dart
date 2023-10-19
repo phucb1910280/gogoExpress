@@ -5,7 +5,6 @@ import 'package:gogoship/UI/orders/cancelled.dart';
 import 'package:gogoship/UI/orders/delayed.dart';
 import 'package:gogoship/UI/orders/delivered.dart';
 import 'package:gogoship/UI/orders/delivering.dart';
-import 'package:gogoship/UI/login_screen.dart';
 import 'package:gogoship/UI/shipper_info_screen.dart';
 import 'package:gogoship/shared/mcolors.dart';
 
@@ -44,21 +43,6 @@ class _HomePageState extends State<HomePage> {
       HomePage.delayedOrders = List.from(delivering["delayedOrders"]);
       HomePage.delivered = List.from(delivering["delivered"]);
     });
-  }
-
-  signOut() async {
-    await FirebaseAuth.instance.signOut();
-    if (FirebaseAuth.instance.currentUser == null) {
-      if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-          (route) => false,
-        );
-      }
-    }
   }
 
   @override
@@ -156,7 +140,7 @@ class _HomePageState extends State<HomePage> {
                             MColors.lightBlue,
                             MColors.blue,
                             MColors.white,
-                            const DeliveringOrdersScreen(),
+                            const DeliveringScreen(),
                           ),
                         ],
                       ),

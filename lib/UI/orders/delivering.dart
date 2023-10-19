@@ -2,21 +2,22 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
+import 'package:gogoship/UI/orders_detail/delivering_detail.dart';
 import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:intl/intl.dart';
 
-class DeliveringOrdersScreen extends StatefulWidget {
-  const DeliveringOrdersScreen({super.key});
+class DeliveringScreen extends StatefulWidget {
+  const DeliveringScreen({super.key});
+  static List<Orders> deliveringOrdersDetail = [];
+  static List<Customers> customersDetail = [];
 
   @override
-  State<DeliveringOrdersScreen> createState() => _DeliveringOrdersScreenState();
+  State<DeliveringScreen> createState() => _DeliveringScreenState();
 }
 
-class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
-  List<Orders> deliveringOrdersDetail = [];
-  List<Customers> customersDetail = [];
+class _DeliveringScreenState extends State<DeliveringScreen> {
   bool isLoading = true;
 
   @override
@@ -43,6 +44,9 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
         cancelReason: "",
         delayReason: "",
         redeliveryDate: "",
+        deliveredImg: "",
+        payments: "",
+        paymentStatus: "",
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -60,8 +64,11 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
           order.cancelReason = data["cancelReason"];
           order.delayReason = data["delayReason"];
           order.redeliveryDate = data["redeliveryDate"];
+          order.deliveredImg = data["deliveredImg"];
+          order.payments = data["payments"];
+          order.paymentStatus = data["paymentStatus"];
         });
-        deliveringOrdersDetail.add(order);
+        DeliveringScreen.deliveringOrdersDetail.add(order);
         getUserData(order.customerID);
       }
     }
@@ -82,7 +89,7 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
         customer.address = data["address"];
         customer.phoneNumber = data["phoneNumber"];
       });
-      customersDetail.add(customer);
+      DeliveringScreen.customersDetail.add(customer);
     }
   }
 
@@ -91,19 +98,29 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Đang giao"),
-        backgroundColor: MColors.background,
+        backgroundColor: MColors.lightBlue,
       ),
       backgroundColor: MColors.background,
       body: !isLoading
           ? ListView.builder(
               itemCount: HomePage.deliveringOrders.length,
-              // padding: const EdgeInsets.symmetric(horizontal: 15),
               itemBuilder: (context, index) {
-                return orderShortInfo(
-                  deliveringOrdersDetail[index].iD,
-                  customersDetail[index].fullName,
-                  customersDetail[index].address,
-                  deliveringOrdersDetail[index].totalAmount,
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DeliveringDetailScreen(
+                        order: DeliveringScreen.deliveringOrdersDetail[index],
+                        customer: DeliveringScreen.customersDetail[index],
+                      ),
+                    ),
+                  ),
+                  child: orderShortInfo(
+                    DeliveringScreen.deliveringOrdersDetail[index].iD,
+                    DeliveringScreen.customersDetail[index].fullName,
+                    DeliveringScreen.customersDetail[index].address,
+                    DeliveringScreen.deliveringOrdersDetail[index].totalAmount,
+                  ),
                 );
               },
             )
@@ -116,7 +133,7 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
   Widget orderShortInfo(String orderID, String customeName,
       String customerAddress, String totalAmount) {
     return Padding(
-      padding: const EdgeInsets.only(top: 5, bottom: 15, right: 15, left: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
         children: [
           Container(
@@ -133,7 +150,7 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
                 ),
               ],
               gradient: const LinearGradient(
-                begin: Alignment.topLeft,
+                begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 stops: [0.0, 1],
                 colors: [
@@ -162,9 +179,6 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
               ),
             ),
           ),
-          // const SizedBox(
-          //   height: 15,
-          // ),
         ],
       ),
     );
@@ -173,6 +187,7 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
   Widget mText(String title, String content) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
@@ -187,6 +202,7 @@ class _DeliveringOrdersScreenState extends State<DeliveringOrdersScreen> {
         Flexible(
           child: Text(
             content,
+            textAlign: TextAlign.right,
             style: const TextStyle(
               fontSize: 22,
               color: MColors.darkBlue,

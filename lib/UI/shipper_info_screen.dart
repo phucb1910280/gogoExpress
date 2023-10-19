@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gogoship/UI/login_screen.dart';
 import 'package:gogoship/shared/mcolors.dart';
 
 class ShipperInfoScreen extends StatefulWidget {
@@ -11,6 +12,21 @@ class ShipperInfoScreen extends StatefulWidget {
 }
 
 class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
+  signOut() async {
+    await FirebaseAuth.instance.signOut();
+    if (FirebaseAuth.instance.currentUser == null) {
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,38 +36,56 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
         backgroundColor: MColors.background,
       ),
       body: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection("Shippers")
-              .doc(FirebaseAuth.instance.currentUser!.email)
-              .snapshots(),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.hasData) {
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      Center(
-                        child: userAvt(snapshot.data["profileImg"]),
-                      ),
-                      const SizedBox(height: 30),
-                      mText("Họ tên:", snapshot.data["fullName"]),
-                      mText("Giới tính:", snapshot.data["gender"]),
-                      mText("CCCD:", snapshot.data["cccd"]),
-                      mText("Số điện thoại:", snapshot.data["phoneNumber"]),
-                      mText("Email:", snapshot.data["email"]),
-                      mText("Đ/c tạm trú:", snapshot.data["secondAddress"]),
-                      mText("Đ/c thường trú:", snapshot.data["mainAddress"]),
-                      mText("Bưu cục:", snapshot.data["postOffice"]),
-                    ],
-                  ),
+        stream: FirebaseFirestore.instance
+            .collection("Shippers")
+            .doc(FirebaseAuth.instance.currentUser!.email)
+            .snapshots(),
+        builder: (BuildContext context, AsyncSnapshot snapshot) {
+          if (snapshot.hasData) {
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Center(
+                      child: userAvt(snapshot.data["profileImg"]),
+                    ),
+                    const SizedBox(height: 30),
+                    mText("Họ tên:", snapshot.data["fullName"]),
+                    mText("Ngày sinh:", snapshot.data["dayOfBirth"]),
+                    mText("Giới tính:", snapshot.data["gender"]),
+                    mText("CCCD:", snapshot.data["cccd"]),
+                    mText("Số điện thoại:", snapshot.data["phoneNumber"]),
+                    mText("Email:", snapshot.data["email"]),
+                    mText("Đ/c tạm trú:", snapshot.data["secondAddress"]),
+                    mText("Đ/c thường trú:", snapshot.data["mainAddress"]),
+                    mText("Bưu cục:", snapshot.data["postOffice"]),
+                    mText("Ngày tham gia:", snapshot.data["joinDay"]),
+                  ],
                 ),
-              );
-            } else {
-              return const CircularProgressIndicator();
-            }
-          }),
+              ),
+            );
+          } else {
+            return const CircularProgressIndicator();
+          }
+        },
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            foregroundColor: MColors.white,
+            backgroundColor: MColors.darkBlue,
+            minimumSize: const Size.fromHeight(50),
+          ),
+          onPressed: signOut,
+          child: const Text(
+            "Đăng xuất",
+            style: TextStyle(fontSize: 20),
+          ),
+        ),
+      ),
     );
   }
 
