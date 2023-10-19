@@ -1,10 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gogoship/UI/orders/cancelled.dart';
+import 'package:gogoship/UI/orders/delayed.dart';
+import 'package:gogoship/UI/orders/delivered.dart';
+import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/UI/login_screen.dart';
+import 'package:gogoship/UI/shipper_info_screen.dart';
 import 'package:gogoship/shared/mcolors.dart';
 
 class HomePage extends StatefulWidget {
+  static List<String> deliveringOrders = <String>[];
+  static List<String> delayedOrders = <String>[];
+  static List<String> cancelledOrders = <String>[];
+  static List<String> delivered = <String>[];
   const HomePage({super.key});
 
   @override
@@ -12,13 +21,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<String> deliveringOrders = <String>[];
-  List<String> delayedOrders = <String>[];
-  List<String> cancelledOrders = <String>[];
-  List<String> delivered = <String>[];
+  String today = "";
 
   @override
   void initState() {
+    var day = DateTime.now();
+    setState(() {
+      today = "${day.day}-${day.month}-${day.year}";
+    });
     getOrderData();
     super.initState();
   }
@@ -29,10 +39,10 @@ class _HomePageState extends State<HomePage> {
         .doc(FirebaseAuth.instance.currentUser!.email)
         .get();
     setState(() {
-      deliveringOrders = List.from(delivering["deliveringOrders"]);
-      cancelledOrders = List.from(delivering["cancelledOrders"]);
-      delayedOrders = List.from(delivering["delayedOrders"]);
-      delivered = List.from(delivering["delivered"]);
+      HomePage.deliveringOrders = List.from(delivering["deliveringOrders"]);
+      HomePage.cancelledOrders = List.from(delivering["cancelledOrders"]);
+      HomePage.delayedOrders = List.from(delivering["delayedOrders"]);
+      HomePage.delivered = List.from(delivering["delivered"]);
     });
   }
 
@@ -68,68 +78,108 @@ class _HomePageState extends State<HomePage> {
                   padding: const EdgeInsets.all(15),
                   child: Column(
                     children: [
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            stops: [0.0, 1],
-                            colors: [
-                              Color.fromARGB(255, 230, 230, 230),
-                              Colors.white,
-                            ],
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ShipperInfoScreen(),
                           ),
-                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: ListTile(
-                          leading: shipperAvt(snapshot.data["profileImg"]),
-                          title: Text(
-                            snapshot.data["fullName"],
-                            style: const TextStyle(
-                                fontSize: 20, color: MColors.darkBlue),
+                        child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              stops: [0.0, 1],
+                              colors: [
+                                Color.fromARGB(255, 230, 230, 230),
+                                Colors.white,
+                              ],
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.3),
+                                spreadRadius: 2,
+                                blurRadius: 3,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                          subtitle: const Text(
-                            "Xem chi tiết",
-                            style: TextStyle(
-                              fontStyle: FontStyle.italic,
-                              color: MColors.darkBlue,
+                          child: ListTile(
+                            isThreeLine: true,
+                            leading: shipperAvt(snapshot.data["profileImg"]),
+                            title: Text(
+                              snapshot.data["fullName"],
+                              style: const TextStyle(
+                                  fontSize: 25, color: MColors.darkBlue),
+                            ),
+                            subtitle: const Text(
+                              "Xem chi tiết",
+                              style: TextStyle(
+                                fontStyle: FontStyle.italic,
+                                fontSize: 15,
+                                color: MColors.darkBlue,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        height: 30,
-                      ),
+                      const SizedBox(height: 30),
                       Row(
                         children: [
-                          orderGridItems("Đã giao", delivered.length.toString(),
-                              MColors.lightGreen, MColors.green, MColors.white),
-                          const SizedBox(width: 10),
-                          orderGridItems(
-                              "Đang giao",
-                              deliveringOrders.length.toString(),
-                              MColors.lightBlue,
-                              MColors.blue,
-                              MColors.white),
+                          Text(
+                            "Hôm nay, $today",
+                            style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: MColors.darkBlue),
+                          ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 20),
                       Row(
                         children: [
                           orderGridItems(
-                              "Tạm hoãn",
-                              delayedOrders.length.toString(),
-                              MColors.yelow,
-                              MColors.orange,
-                              MColors.white),
-                          const SizedBox(width: 10),
+                            "Đã giao",
+                            HomePage.delivered.length.toString(),
+                            MColors.lightGreen,
+                            MColors.green,
+                            MColors.white,
+                            const DeliveredScreen(),
+                          ),
+                          const SizedBox(width: 15),
                           orderGridItems(
-                              "Đã hủy",
-                              cancelledOrders.length.toString(),
-                              MColors.lightRed,
-                              MColors.red,
-                              MColors.white),
+                            "Đang giao",
+                            HomePage.deliveringOrders.length.toString(),
+                            MColors.lightBlue,
+                            MColors.blue,
+                            MColors.white,
+                            const DeliveringOrdersScreen(),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      Row(
+                        children: [
+                          orderGridItems(
+                            "Tạm hoãn",
+                            HomePage.delayedOrders.length.toString(),
+                            MColors.yelow,
+                            MColors.orange,
+                            MColors.white,
+                            const DelayedScreen(),
+                          ),
+                          const SizedBox(width: 15),
+                          orderGridItems(
+                            "Đã hủy",
+                            HomePage.cancelledOrders.length.toString(),
+                            MColors.lightRed,
+                            MColors.red,
+                            MColors.white,
+                            const CancelledScreen(),
+                          ),
                         ],
                       ),
                     ],
@@ -146,41 +196,57 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget orderGridItems(String title, String content, Color color1,
-      Color color2, Color textColor) {
+      Color color2, Color textColor, Widget widget) {
     return Expanded(
       flex: 1,
-      child: Container(
-        height: 170,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            stops: const [0.0, 1],
-            colors: [
-              color1,
-              color2,
+      child: GestureDetector(
+        onTap: () => Navigator.push(
+            context, MaterialPageRoute(builder: (content) => widget)),
+        child: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                spreadRadius: 2,
+                blurRadius: 4,
+                offset: const Offset(0, 3),
+              ),
             ],
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              stops: const [0.0, 1],
+              colors: [
+                color1,
+                color2,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(30),
           ),
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 25),
           child: Column(
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 22,
-                  color: textColor,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 22,
+                    color: textColor,
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                content,
-                style: TextStyle(
-                    fontSize: 50,
-                    color: textColor,
-                    fontWeight: FontWeight.bold),
+              Padding(
+                padding: const EdgeInsets.all(5),
+                child: Text(
+                  content,
+                  style: TextStyle(
+                      fontSize: 50,
+                      color: textColor,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+              const SizedBox(
+                height: 40,
               ),
             ],
           ),
