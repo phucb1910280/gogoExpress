@@ -73,12 +73,12 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
     }
   }
 
-  getUserData(String customersID) async {
+  getUserData(String customerID) async {
     var customer = Customers(
         id: "", fullName: "", email: "", address: "", phoneNumber: "");
     var data = await FirebaseFirestore.instance
         .collection("Users")
-        .doc(customersID)
+        .doc(customerID)
         .get();
     if (data.exists) {
       setState(() {
@@ -102,7 +102,7 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
       backgroundColor: MColors.background,
       body: !isLoading
           ? ListView.builder(
-              itemCount: HomePage.cancelledOrders.length,
+              itemCount: HomePage.delivered.length,
               itemBuilder: (context, index) {
                 return orderShortInfo(
                     deliveredOrdersDetail[index].iD,
