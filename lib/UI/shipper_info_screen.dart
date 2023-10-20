@@ -1,5 +1,9 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/login_screen.dart';
 import 'package:gogoship/shared/mcolors.dart';
@@ -25,6 +29,37 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
         );
       }
     }
+  }
+
+  //shipperProfileImages
+  UploadTask? uploadTask;
+  PlatformFile? pickedFile;
+  String filePath = "";
+
+  Future updateProfileImg() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result == null) {
+      return;
+    }
+    setState(() {
+      pickedFile = result.files.first;
+      filePath = pickedFile!.path.toString();
+    });
+    final path =
+        "shipperProfileImages/${FirebaseAuth.instance.currentUser!.email}";
+    final file = File(pickedFile!.path!);
+    final ref = FirebaseStorage.instance.ref().child(path);
+    uploadTask = ref.putFile(file);
+    final snapshot = await uploadTask!.whenComplete(() => null);
+    var userAvtStr = await snapshot.ref.getDownloadURL();
+    await FirebaseFirestore.instance
+        .collection("Shippers")
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .update(
+      {
+        "profileImg": userAvtStr,
+      },
+    );
   }
 
   @override
@@ -90,16 +125,36 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
   }
 
   Widget userAvt(String imgUrl) {
-    return Container(
-      height: 200,
-      width: 200,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        image: DecorationImage(
-          fit: BoxFit.cover,
-          image: NetworkImage(imgUrl),
+    return Stack(
+      children: [
+        Container(
+          height: 200,
+          width: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            image: DecorationImage(
+              fit: BoxFit.cover,
+              image: NetworkImage(imgUrl),
+            ),
+          ),
         ),
-      ),
+        Positioned(
+          bottom: 0,
+          right: 0,
+          child: GestureDetector(
+            onTap: updateProfileImg,
+            child: Container(
+              decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(60),
+                  color: MColors.lightBlue.withOpacity(.5)),
+              child: const Padding(
+                padding: EdgeInsets.all(10),
+                child: Icon(Icons.edit),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
