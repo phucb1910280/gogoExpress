@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
+import 'package:gogoship/UI/orders_detail/delivered_detail.dart';
 import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
 import 'package:gogoship/shared/mcolors.dart';
@@ -97,18 +98,29 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Đã giao"),
-        backgroundColor: MColors.lightGreen,
+        backgroundColor: MColors.lightGreen2,
       ),
       backgroundColor: MColors.background,
       body: !isLoading
           ? ListView.builder(
               itemCount: HomePage.delivered.length,
               itemBuilder: (context, index) {
-                return orderShortInfo(
-                    deliveredOrdersDetail[index].iD,
-                    deliveredOrdersDetail[index].totalAmount,
-                    customersDetail[index].fullName,
-                    deliveredOrdersDetail[index].status);
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DeliveredDetailScreen(
+                        order: deliveredOrdersDetail[index],
+                        customer: customersDetail[index],
+                      ),
+                    ),
+                  ),
+                  child: orderShortInfo(
+                      deliveredOrdersDetail[index].iD,
+                      deliveredOrdersDetail[index].totalAmount,
+                      customersDetail[index].fullName,
+                      deliveredOrdersDetail[index].status),
+                );
               },
             )
           : const Center(

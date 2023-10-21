@@ -63,7 +63,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: MColors.lightBlue,
+                    color: MColors.blue,
                     width: 1,
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -83,7 +83,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: MColors.lightBlue,
+                    color: MColors.blue,
                     width: 1,
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -148,7 +148,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
               Container(
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: MColors.lightBlue,
+                    color: MColors.blue,
                     width: 1,
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -209,14 +209,12 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                 NumberFormat.simpleCurrency(locale: 'vi-VN', decimalDigits: 0)
                     .format(double.parse(widget.order.totalAmount)),
                 fontSize: 25,
-                bold: true,
               ),
               mText(
                 "Phí vận chuyển:",
                 NumberFormat.simpleCurrency(locale: 'vi-VN', decimalDigits: 0)
                     .format(double.parse(widget.order.transportFee)),
                 fontSize: 25,
-                bold: true,
               ),
               mText(
                 "Tổng cộng:",
@@ -316,7 +314,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
   Widget mText(String title, String content,
       {bool bold = false, double fontSize = 20}) {
     return Padding(
-      padding: const EdgeInsets.all(2.0),
+      padding: const EdgeInsets.all(3.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
