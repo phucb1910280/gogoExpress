@@ -217,7 +217,7 @@ class _DeliveredDetailScreenState extends State<DeliveredDetailScreen> {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 19,
+              fontSize: 20,
               color: Colors.black,
             ),
           ),

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/UI/homepage.dart';
+import 'package:gogoship/UI/orders_detail/delay_confirm.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/models/customers.dart';
@@ -57,7 +58,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Column(
             children: [
               Container(
@@ -104,7 +105,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                             child: ElevatedButton.icon(
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: MColors.darkBlue,
+                                backgroundColor: MColors.blue,
                                 foregroundColor: MColors.background,
                                 minimumSize: const Size.fromHeight(50),
                               ),
@@ -125,7 +126,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                             child: ElevatedButton.icon(
                               onPressed: () {},
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: MColors.darkBlue,
+                                backgroundColor: Colors.green[600],
                                 foregroundColor: MColors.background,
                                 minimumSize: const Size.fromHeight(50),
                               ),
@@ -235,13 +236,13 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                     takeImg ? confirmDelivered() : takePhoto(),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: MColors.background,
-                  backgroundColor: MColors.darkBlue,
-                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: Colors.teal,
+                  minimumSize: const Size.fromHeight(55),
                 ),
                 child: Text(
-                  !takeImg ? "Chụp ảnh giao hàng" : "Xác nhận đã giao",
+                  !takeImg ? "Chụp ảnh giao hàng" : "Xác nhận giao hàng",
                   style: const TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                   ),
                 ),
               ),
@@ -276,16 +277,23 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
               ),
               const SizedBox(height: 10),
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DelayConfirmScreen(
+                      orderID: widget.order.iD,
+                    ),
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: MColors.darkBlue,
-                  backgroundColor: MColors.background,
-                  minimumSize: const Size.fromHeight(50),
+                  foregroundColor: Colors.black,
+                  backgroundColor: MColors.yelow,
+                  minimumSize: const Size.fromHeight(55),
                 ),
                 child: const Text(
                   "Yêu cầu hoãn đơn",
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                   ),
                 ),
               ),
@@ -293,17 +301,18 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
               ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  foregroundColor: MColors.darkBlue,
-                  backgroundColor: MColors.background,
-                  minimumSize: const Size.fromHeight(50),
+                  foregroundColor: MColors.white,
+                  backgroundColor: MColors.red,
+                  minimumSize: const Size.fromHeight(55),
                 ),
                 child: const Text(
                   "Yêu cầu hủy đơn",
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 20,
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
             ],
           ),
         ),
@@ -322,7 +331,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
           Text(
             title,
             style: const TextStyle(
-              fontSize: 19,
+              fontSize: 20,
               color: Colors.black,
             ),
           ),

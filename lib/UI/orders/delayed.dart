@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
+import 'package:gogoship/UI/orders_detail/delayed_detail.dart';
 import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
 import 'package:gogoship/shared/mcolors.dart';
@@ -104,12 +105,24 @@ class _DelayedScreenState extends State<DelayedScreen> {
           ? ListView.builder(
               itemCount: HomePage.delayedOrders.length,
               itemBuilder: (context, index) {
-                return orderShortInfo(
-                  delayedOrdersDetail[index].iD,
-                  customersDetail[index].fullName,
-                  delayedOrdersDetail[index].delayReason!,
-                  delayedOrdersDetail[index].totalAmount,
-                  delayedOrdersDetail[index].redeliveryDate!,
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DelayedDetailScreen(
+                        order: delayedOrdersDetail[index],
+                        customer: customersDetail[index],
+                      ),
+                    ),
+                  ),
+                  child: orderShortInfo(
+                    delayedOrdersDetail[index].iD,
+                    customersDetail[index].fullName,
+                    delayedOrdersDetail[index].status,
+                    delayedOrdersDetail[index].delayReason!,
+                    delayedOrdersDetail[index].totalAmount,
+                    delayedOrdersDetail[index].redeliveryDate!,
+                  ),
                 );
               },
             )
@@ -119,8 +132,8 @@ class _DelayedScreenState extends State<DelayedScreen> {
     );
   }
 
-  Widget orderShortInfo(String orderID, String customeName, String delayReason,
-      String totalAmount, String redeliveryDate) {
+  Widget orderShortInfo(String orderID, String customeName, String status,
+      String delayReason, String totalAmount, String redeliveryDate) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
@@ -162,6 +175,8 @@ class _DelayedScreenState extends State<DelayedScreen> {
                           .format(double.parse(totalAmount))),
                   const SizedBox(height: 10),
                   mText("Khách hàng:", customeName),
+                  const SizedBox(height: 10),
+                  mText("Trạng thái:", status),
                   const SizedBox(height: 10),
                   mText("Lý do:", delayReason),
                   const SizedBox(height: 10),
