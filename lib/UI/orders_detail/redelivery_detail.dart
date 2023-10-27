@@ -1,22 +1,26 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gogoship/UI/homepage.dart';
+import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:intl/intl.dart';
 
-class DelayedDetailScreen extends StatefulWidget {
+class RedeliveryDetailScreen extends StatefulWidget {
   final Orders order;
   final Customers customer;
-  const DelayedDetailScreen(
+  const RedeliveryDetailScreen(
       {super.key, required this.order, required this.customer});
 
   @override
-  State<DelayedDetailScreen> createState() => _DelayedDetailScreenState();
+  State<RedeliveryDetailScreen> createState() => _RedeliveryDetailScreenState();
 }
 
-class _DelayedDetailScreenState extends State<DelayedDetailScreen> {
+class _RedeliveryDetailScreenState extends State<RedeliveryDetailScreen> {
   double s = 0;
   double t = 0;
   bool isLoading = true;
@@ -223,6 +227,23 @@ class _DelayedDetailScreenState extends State<DelayedDetailScreen> {
                 ),
               ),
             ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        child: ElevatedButton(
+          onPressed: () async => change2Delivering(),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: MColors.blue,
+            foregroundColor: MColors.white,
+            minimumSize: const Size.fromHeight(55),
+          ),
+          child: const Text(
+            "Giao lại",
+            style: TextStyle(
+              fontSize: 20,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -258,5 +279,67 @@ class _DelayedDetailScreenState extends State<DelayedDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> change2Delivering() async {
+    onSaving();
+    try {
+      await FirebaseFirestore.instance
+          .collection("Orders")
+          .doc(widget.order.iD)
+          .update({
+        "status": "Đang giao hàng",
+        "redeliveryDate": "",
+      });
+      setState(() {
+        HomePage.deliveringOrders = [];
+        DeliveringScreen.customersDetail = [];
+        DeliveringScreen.deliveringOrdersDetail = [];
+      });
+      List changeStatusOrder = [widget.order.iD];
+      await FirebaseFirestore.instance
+          .collection("Shippers")
+          .doc(FirebaseAuth.instance.currentUser!.email)
+          .update({
+        "redeliveryOrders": FieldValue.arrayRemove(changeStatusOrder),
+        "deliveringOrders": FieldValue.arrayUnion(changeStatusOrder),
+      }).then((value) {
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+          (route) => false,
+        );
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<void> onSaving() async {
+    if (isLoading) {
+      return showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: const SizedBox(
+              height: 100,
+              width: 100,
+              child: Padding(
+                padding: EdgeInsets.all(12.0),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
+          );
+        },
+      );
+    }
   }
 }

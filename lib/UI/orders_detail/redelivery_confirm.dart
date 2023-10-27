@@ -6,15 +6,16 @@ import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:intl/intl.dart';
 
-class DelayConfirmScreen extends StatefulWidget {
+class RedeliveryConfirmScreen extends StatefulWidget {
   final String orderID;
-  const DelayConfirmScreen({super.key, required this.orderID});
+  const RedeliveryConfirmScreen({super.key, required this.orderID});
 
   @override
-  State<DelayConfirmScreen> createState() => _DelayConfirmScreenState();
+  State<RedeliveryConfirmScreen> createState() =>
+      _RedeliveryConfirmScreenState();
 }
 
-class _DelayConfirmScreenState extends State<DelayConfirmScreen> {
+class _RedeliveryConfirmScreenState extends State<RedeliveryConfirmScreen> {
   String redeliveryDay = "";
   bool responsibility = false;
   int choice = 1;
@@ -244,21 +245,18 @@ class _DelayConfirmScreenState extends State<DelayConfirmScreen> {
           "delayReason": reason,
           "status": "Tạm hoãn",
         });
-        HomePage.deliveringOrders.removeWhere(
-          (element) => element == widget.orderID,
-        );
-        HomePage.delayedOrders.add(widget.orderID);
-
-        DeliveringScreen.deliveringOrdersDetail.removeWhere(
-          (element) => element.iD == widget.orderID,
-        );
-        List removeItem = [widget.orderID];
+        setState(() {
+          HomePage.deliveringOrders = [];
+          DeliveringScreen.deliveringOrdersDetail = [];
+          DeliveringScreen.customersDetail = [];
+        });
+        List changeStatusOrder = [widget.orderID];
         await FirebaseFirestore.instance
             .collection("Shippers")
             .doc(FirebaseAuth.instance.currentUser!.email)
             .update({
-          "delayedOrders": FieldValue.arrayUnion(HomePage.delayedOrders),
-          "deliveringOrders": FieldValue.arrayRemove(removeItem),
+          "redeliveryOrders": FieldValue.arrayUnion(changeStatusOrder),
+          "deliveringOrders": FieldValue.arrayRemove(changeStatusOrder),
         }).then((value) {
           setState(() {
             isLoading = false;

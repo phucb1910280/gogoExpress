@@ -10,8 +10,11 @@ class Orders {
   String? cancelReason;
   String? redeliveryDate;
   String? deliveredImg;
+  String? getOrderImg;
   String payments;
   String paymentStatus;
+  String supplierID;
+  bool? isNewOrder;
 
   Orders({
     required this.iD,
@@ -27,5 +30,8 @@ class Orders {
     this.deliveredImg,
     required this.payments,
     required this.paymentStatus,
+    this.isNewOrder,
+    required this.supplierID,
+    this.getOrderImg,
   });
 }

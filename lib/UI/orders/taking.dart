@@ -1,38 +1,36 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
-import 'package:gogoship/UI/orders_detail/delayed_detail.dart';
-import 'package:gogoship/models/customers.dart';
+import 'package:gogoship/UI/orders_detail/taking_detail.dart';
 import 'package:gogoship/models/orders.dart';
+import 'package:gogoship/models/suppliers.dart';
 import 'package:gogoship/shared/mcolors.dart';
-import 'package:intl/intl.dart';
 
-class DelayedScreen extends StatefulWidget {
-  const DelayedScreen({super.key});
+class TakingOrdersScreen extends StatefulWidget {
+  const TakingOrdersScreen({super.key});
 
   @override
-  State<DelayedScreen> createState() => _DelayedScreenState();
+  State<TakingOrdersScreen> createState() => _TakingOrdersScreenState();
 }
 
-class _DelayedScreenState extends State<DelayedScreen> {
-  List<Orders> delayedOrdersDetail = [];
-  List<Customers> customersDetail = [];
+class _TakingOrdersScreenState extends State<TakingOrdersScreen> {
+  List<Orders> takingOrdersDetail = [];
+  List<Suppliers> supplierDetail = [];
   bool isLoading = true;
 
   @override
   void initState() {
     getOrderData();
-    Timer(const Duration(milliseconds: 500), () {
+    if (HomePage.takingOrders.isEmpty) {
       setState(() {
         isLoading = false;
       });
-    });
+    }
     super.initState();
   }
 
   getOrderData() async {
-    for (var element in HomePage.delayedOrders) {
+    for (var element in HomePage.takingOrders) {
       var order = Orders(
         iD: "",
         customerID: "",
@@ -47,6 +45,7 @@ class _DelayedScreenState extends State<DelayedScreen> {
         deliveredImg: "",
         payments: "",
         paymentStatus: "",
+        supplierID: "",
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -67,29 +66,43 @@ class _DelayedScreenState extends State<DelayedScreen> {
           order.deliveredImg = data["deliveredImg"];
           order.payments = data["payments"];
           order.paymentStatus = data["paymentStatus"];
+          order.supplierID = data["supplierID"];
         });
-        delayedOrdersDetail.add(order);
-        getUserData(order.customerID);
+        takingOrdersDetail.add(order);
+        getUserData(order.supplierID);
       }
     }
   }
 
   getUserData(String customersID) async {
-    var customer = Customers(
-        id: "", fullName: "", email: "", address: "", phoneNumber: "");
+    var supplier = Suppliers(
+        id: "",
+        brand: "",
+        email: "",
+        address: "",
+        phoneNumber: "",
+        long: 0,
+        lat: 0);
     var data = await FirebaseFirestore.instance
-        .collection("Users")
+        .collection("Suppliers")
         .doc(customersID)
         .get();
     if (data.exists) {
       setState(() {
-        customer.id = data["id"];
-        customer.fullName = data["fullName"];
-        customer.email = data["email"];
-        customer.address = data["address"];
-        customer.phoneNumber = data["phoneNumber"];
+        supplier.id = data["id"];
+        supplier.brand = data["brand"];
+        supplier.email = data["email"];
+        supplier.address = data["address"];
+        supplier.phoneNumber = data["phoneNumber"];
+        supplier.lat = data["lat"];
+        supplier.long = data["long"];
       });
-      customersDetail.add(customer);
+      supplierDetail.add(supplier);
+      if (supplierDetail.length == HomePage.takingOrders.length) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -97,31 +110,29 @@ class _DelayedScreenState extends State<DelayedScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Tạm hoãn"),
-        backgroundColor: MColors.yelow,
+        title: const Text("Đang lấy"),
+        backgroundColor: MColors.lightPink,
       ),
       backgroundColor: MColors.background,
       body: !isLoading
           ? ListView.builder(
-              itemCount: HomePage.delayedOrders.length,
+              itemCount: HomePage.takingOrders.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DelayedDetailScreen(
-                        order: delayedOrdersDetail[index],
-                        customer: customersDetail[index],
+                      builder: (_) => TakingOrderDetailScreen(
+                        order: takingOrdersDetail[index],
+                        suppliers: supplierDetail[index],
                       ),
                     ),
                   ),
                   child: orderShortInfo(
-                    delayedOrdersDetail[index].iD,
-                    customersDetail[index].fullName,
-                    delayedOrdersDetail[index].status,
-                    delayedOrdersDetail[index].delayReason!,
-                    delayedOrdersDetail[index].totalAmount,
-                    delayedOrdersDetail[index].redeliveryDate!,
+                    takingOrdersDetail[index].iD,
+                    supplierDetail[index].brand,
+                    supplierDetail[index].phoneNumber,
+                    supplierDetail[index].address,
                   ),
                 );
               },
@@ -132,8 +143,8 @@ class _DelayedScreenState extends State<DelayedScreen> {
     );
   }
 
-  Widget orderShortInfo(String orderID, String customeName, String status,
-      String delayReason, String totalAmount, String redeliveryDate) {
+  Widget orderShortInfo(
+      String orderID, String brand, String phoneNumber, String address) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
@@ -168,19 +179,11 @@ class _DelayedScreenState extends State<DelayedScreen> {
                 children: [
                   mText("Mã đơn:", orderID),
                   const SizedBox(height: 10),
-                  mText(
-                      "Tổng tiền:",
-                      NumberFormat.simpleCurrency(
-                              locale: 'vi-VN', decimalDigits: 0)
-                          .format(double.parse(totalAmount))),
+                  mText("Cửa hàng:", brand),
                   const SizedBox(height: 10),
-                  mText("Khách hàng:", customeName),
+                  mText("Số ĐT", phoneNumber),
                   const SizedBox(height: 10),
-                  mText("Trạng thái:", status),
-                  const SizedBox(height: 10),
-                  mText("Lý do:", delayReason),
-                  const SizedBox(height: 10),
-                  mText("Ngày giao lại:", redeliveryDate),
+                  mText("Địa chỉ:", address),
                 ],
               ),
             ),

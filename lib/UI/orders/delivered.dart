@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
@@ -22,17 +21,17 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
 
   @override
   void initState() {
-    getOrderData();
-    Timer(const Duration(milliseconds: 500), () {
+    if (HomePage.deliveredOrders.isEmpty) {
       setState(() {
         isLoading = false;
       });
-    });
+    }
+    getOrderData();
     super.initState();
   }
 
   getOrderData() async {
-    for (var element in HomePage.delivered) {
+    for (var element in HomePage.deliveredOrders) {
       var order = Orders(
         iD: "",
         customerID: "",
@@ -47,6 +46,7 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
         deliveredImg: "",
         payments: "",
         paymentStatus: "",
+        supplierID: '',
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -67,6 +67,8 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
           order.deliveredImg = data["deliveredImg"];
           order.payments = data["payments"];
           order.paymentStatus = data["paymentStatus"];
+          order.isNewOrder = data["isNewOrder"];
+          order.supplierID = data["supplierID"];
         });
         deliveredOrdersDetail.add(order);
         getUserData(order.customerID);
@@ -76,7 +78,13 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
 
   getUserData(String customerID) async {
     var customer = Customers(
-        id: "", fullName: "", email: "", address: "", phoneNumber: "");
+        id: "",
+        fullName: "",
+        email: "",
+        address: "",
+        phoneNumber: "",
+        lat: 0,
+        long: 0);
     var data = await FirebaseFirestore.instance
         .collection("Users")
         .doc(customerID)
@@ -88,8 +96,15 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
         customer.email = data["email"];
         customer.address = data["address"];
         customer.phoneNumber = data["phoneNumber"];
+        customer.lat = data["lat"];
+        customer.long = data["long"];
       });
       customersDetail.add(customer);
+      if (customersDetail.length == HomePage.deliveredOrders.length) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -103,7 +118,7 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
       backgroundColor: MColors.background,
       body: !isLoading
           ? ListView.builder(
-              itemCount: HomePage.delivered.length,
+              itemCount: HomePage.deliveredOrders.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
                   onTap: () => Navigator.push(

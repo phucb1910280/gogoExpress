@@ -1,44 +1,66 @@
 import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/UI/homepage.dart';
 import 'package:gogoship/UI/orders_detail/mymapview.dart';
-import 'package:gogoship/UI/orders_detail/redelivery_confirm.dart';
+import 'package:gogoship/models/suppliers.dart';
+import 'package:intl/intl.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
-import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 
-class DeliveringDetailScreen extends StatefulWidget {
+class TakingOrderDetailScreen extends StatefulWidget {
   final Orders order;
-  final Customers customer;
-  const DeliveringDetailScreen(
-      {super.key, required this.order, required this.customer});
+  final Suppliers suppliers;
+  const TakingOrderDetailScreen(
+      {super.key, required this.order, required this.suppliers});
 
   @override
-  State<DeliveringDetailScreen> createState() => _DeliveringDetailScreenState();
+  State<TakingOrderDetailScreen> createState() =>
+      _TakingOrderDetailScreenState();
 }
 
-class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
-  double s = 0;
-  double t = 0;
+class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
   XFile? file;
   String path = "";
-  bool takeImg = false;
+  bool tookImg = false;
   bool isLoading = true;
+  bool hideDelayRequest = true;
+
+  int delayChoice = 1;
+  String delayReason = 'NCC chưa có hàng';
+  bool responsibility = false;
+  String redeliveryDay = "";
 
   @override
   void initState() {
-    s = double.parse(widget.order.transportFee);
-    t = double.parse(widget.order.totalAmount);
-    path = "deliveredConfirmImg/${widget.order.iD}";
+    path = "getOrderConfirmImgs/${widget.order.iD}";
+    var t = DateTime.now();
+    String tommorrow = "${t.day + 1}/${t.month}/${t.year}";
+    setState(() {
+      redeliveryDay = tommorrow;
+    });
     super.initState();
+  }
+
+  void showDTPicker(BuildContext context) {
+    showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2023),
+      lastDate: DateTime(2024),
+    ).then((dateTime) {
+      if (dateTime != null) {
+        setState(() {
+          redeliveryDay = DateFormat('dd/MM/yyyy').format(dateTime);
+        });
+      }
+    });
   }
 
   makingPhoneCall(String phoneNumber) async {
@@ -95,10 +117,9 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                   padding: const EdgeInsets.all(10),
                   child: Column(
                     children: [
-                      mText("Người nhận:", widget.customer.fullName,
-                          bold: true),
-                      mText("Số ĐT:", widget.customer.phoneNumber),
-                      mText("Địa chỉ:", widget.customer.address),
+                      mText("Cửa hàng:", widget.suppliers.brand, bold: true),
+                      mText("Số ĐT:", widget.suppliers.phoneNumber),
+                      mText("Địa chỉ:", widget.suppliers.address),
                       const SizedBox(height: 15),
                       Row(
                         children: [
@@ -111,8 +132,8 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                                   MaterialPageRoute(
                                     builder: (_) => MyMapView(
                                       coordinates: LatLng(
-                                        widget.customer.lat,
-                                        widget.customer.long,
+                                        widget.suppliers.lat,
+                                        widget.suppliers.long,
                                       ),
                                     ),
                                   ),
@@ -139,7 +160,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                             flex: 1,
                             child: ElevatedButton.icon(
                               onPressed: () async =>
-                                  makingPhoneCall(widget.customer.phoneNumber),
+                                  makingPhoneCall(widget.suppliers.phoneNumber),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green[600],
                                 foregroundColor: MColors.background,
@@ -160,85 +181,6 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: MColors.blue,
-                    width: 1,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(10),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.circle,
-                              size: 10,
-                              color: MColors.darkBlue,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              widget.order.payments,
-                              style: const TextStyle(
-                                fontSize: 20,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(2),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.circle,
-                              size: 10,
-                              color: MColors.darkBlue,
-                            ),
-                            const SizedBox(width: 10),
-                            Text(
-                              widget.order.paymentStatus,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: MColors.darkBlue,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              mText(
-                "Tạm tính:",
-                NumberFormat.simpleCurrency(locale: 'vi-VN', decimalDigits: 0)
-                    .format(double.parse(widget.order.totalAmount)),
-                fontSize: 25,
-              ),
-              mText(
-                "Phí vận chuyển:",
-                NumberFormat.simpleCurrency(locale: 'vi-VN', decimalDigits: 0)
-                    .format(double.parse(widget.order.transportFee)),
-                fontSize: 25,
-              ),
-              mText(
-                "Tổng cộng:",
-                NumberFormat.simpleCurrency(locale: 'vi-VN', decimalDigits: 0)
-                    .format(s + t),
-                fontSize: 25,
-                bold: true,
-              ),
               SizedBox(
                 height: 40,
                 child: Divider(
@@ -246,7 +188,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                 ),
               ),
               SizedBox(
-                child: takeImg
+                child: tookImg
                     ? Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 5),
                         child: Column(
@@ -254,7 +196,7 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                             const Row(
                               children: [
                                 Text(
-                                  "Ảnh giao hàng",
+                                  "Ảnh lấy hàng",
                                   style: TextStyle(
                                     fontSize: 20,
                                     color: MColors.darkBlue,
@@ -273,45 +215,107 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
                       )
                     : null,
               ),
-              const SizedBox(height: 15),
+              SizedBox(height: tookImg ? 15 : 0),
               ElevatedButton(
                 onPressed: () async =>
-                    takeImg ? confirmDelivered() : takePhoto(),
+                    tookImg ? confirmGetOrder() : takePhoto(),
                 style: ElevatedButton.styleFrom(
                   foregroundColor: MColors.background,
                   backgroundColor: Colors.teal,
                   minimumSize: const Size.fromHeight(55),
                 ),
                 child: Text(
-                  !takeImg ? "Chụp ảnh giao hàng" : "Xác nhận giao hàng",
+                  !tookImg ? "Chụp ảnh lấy hàng" : "Xác nhận lấy hàng",
                   style: const TextStyle(
                     fontSize: 20,
                   ),
                 ),
               ),
               const SizedBox(height: 15),
+              SizedBox(
+                child: tookImg == false && !hideDelayRequest
+                    ? Column(
+                        children: [
+                          const SizedBox(height: 15),
+                          const Row(
+                            children: [
+                              Text(
+                                "Lý do hoãn đơn:",
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                delayReason = 'NCC chưa có hàng';
+                                delayChoice = 1;
+                              });
+                            },
+                            child: dalayReason('NCC chưa có hàng', 1),
+                          ),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                delayReason = 'NCC hẹn ngày lấy';
+                                delayChoice = 2;
+                              });
+                            },
+                            child: dalayReason('NCC hẹn ngày lấy', 2),
+                          ),
+                          const SizedBox(height: 10),
+                          mText("Ngày lấy:", redeliveryDay,
+                              bold: true, fontSize: 24),
+                          const SizedBox(height: 15),
+                          SizedBox(
+                            child: delayChoice == 2
+                                ? ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.yellow[100],
+                                      foregroundColor: Colors.black,
+                                      minimumSize: const Size.fromHeight(55),
+                                    ),
+                                    onPressed: () => showDTPicker(context),
+                                    child: const Text(
+                                      "Chọn ngày lấy",
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(height: 15),
+                        ],
+                      )
+                    : const SizedBox(),
+              ),
               ElevatedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RedeliveryConfirmScreen(
-                      orderID: widget.order.iD,
-                    ),
-                  ),
-                ),
+                onPressed: () {
+                  tookImg == false
+                      ? setState(() {
+                          hideDelayRequest = !hideDelayRequest;
+                        })
+                      : null;
+                },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black,
-                  backgroundColor: MColors.yelow,
+                  backgroundColor: tookImg ? Colors.grey : MColors.yelow,
                   minimumSize: const Size.fromHeight(55),
                 ),
-                child: const Text(
-                  "Yêu cầu hoãn đơn",
-                  style: TextStyle(
+                child: Text(
+                  hideDelayRequest ? "Yêu cầu hoãn đơn" : "Hủy",
+                  style: const TextStyle(
                     fontSize: 20,
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 15),
             ],
           ),
         ),
@@ -358,13 +362,14 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
     file = await ip.pickImage(source: ImageSource.camera);
     if (file != null) {
       setState(() {
-        takeImg = true;
+        tookImg = true;
+        hideDelayRequest = true;
       });
     }
   }
 
-  Future<void> confirmDelivered() async {
-    if (takeImg) {
+  Future<void> confirmGetOrder() async {
+    if (tookImg) {
       onSaving();
       final ref = FirebaseStorage.instance.ref().child(path);
       await ref.putFile(File(file!.path));
@@ -374,22 +379,18 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
             .collection("Orders")
             .doc(widget.order.iD)
             .update({
-          "deliveredImg": imgUrl,
-          "status": "Đã giao hàng",
-          "paymentStatus": "Đã thanh toán",
+          "getOrderImg": imgUrl,
+          "status": "Đã lấy hàng",
         });
         setState(() {
-          HomePage.deliveringOrders = [];
-          DeliveringScreen.customersDetail = [];
-          DeliveringScreen.deliveringOrdersDetail = [];
+          HomePage.takingOrders = [];
         });
         List changeStatusOrder = [widget.order.iD];
         await FirebaseFirestore.instance
             .collection("Shippers")
             .doc(FirebaseAuth.instance.currentUser!.email)
             .update({
-          "deliveredOrders": FieldValue.arrayUnion(changeStatusOrder),
-          "deliveringOrders": FieldValue.arrayRemove(changeStatusOrder),
+          "takingOrders": FieldValue.arrayRemove(changeStatusOrder),
         }).then((value) {
           setState(() {
             isLoading = false;
@@ -429,5 +430,25 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
         },
       );
     }
+  }
+
+  Widget dalayReason(String content, int choiceIndex) {
+    return ListTile(
+      title: Text(
+        content,
+        style: const TextStyle(fontSize: 22),
+      ),
+      leading: Radio(
+        value: choiceIndex,
+        groupValue: delayChoice,
+        activeColor: MColors.yelow,
+        onChanged: (value) {
+          setState(() {
+            delayChoice = choiceIndex;
+            delayReason = content;
+          });
+        },
+      ),
+    );
   }
 }

@@ -1,15 +1,15 @@
-class Customers {
+class Suppliers {
   String id;
-  String fullName;
+  String brand;
   String phoneNumber;
   String address;
   String email;
   double long;
   double lat;
 
-  Customers({
+  Suppliers({
     required this.id,
-    required this.fullName,
+    required this.brand,
     required this.email,
     required this.address,
     required this.phoneNumber,

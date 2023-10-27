@@ -1,37 +1,37 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
+import 'package:gogoship/UI/orders_detail/redelivery_detail.dart';
 import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:intl/intl.dart';
 
-class CancelledScreen extends StatefulWidget {
-  const CancelledScreen({super.key});
+class RedeliveryScreen extends StatefulWidget {
+  const RedeliveryScreen({super.key});
 
   @override
-  State<CancelledScreen> createState() => _CancelledScreenState();
+  State<RedeliveryScreen> createState() => _RedeliveryScreenState();
 }
 
-class _CancelledScreenState extends State<CancelledScreen> {
-  List<Orders> cancelledOrdersDetail = [];
+class _RedeliveryScreenState extends State<RedeliveryScreen> {
+  List<Orders> redeliveryOrdersDetail = [];
   List<Customers> customersDetail = [];
   bool isLoading = true;
 
   @override
   void initState() {
-    getOrderData();
-    Timer(const Duration(milliseconds: 500), () {
+    if (HomePage.redeliveryOrders.isEmpty) {
       setState(() {
         isLoading = false;
       });
-    });
+    }
+    getOrderData();
     super.initState();
   }
 
   getOrderData() async {
-    for (var element in HomePage.cancelledOrders) {
+    for (var element in HomePage.redeliveryOrders) {
       var order = Orders(
         iD: "",
         customerID: "",
@@ -46,6 +46,7 @@ class _CancelledScreenState extends State<CancelledScreen> {
         deliveredImg: "",
         payments: "",
         paymentStatus: "",
+        supplierID: '',
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -66,8 +67,10 @@ class _CancelledScreenState extends State<CancelledScreen> {
           order.deliveredImg = data["deliveredImg"];
           order.payments = data["payments"];
           order.paymentStatus = data["paymentStatus"];
+          order.isNewOrder = data["isNewOrder"];
+          order.supplierID = data["supplierID"];
         });
-        cancelledOrdersDetail.add(order);
+        redeliveryOrdersDetail.add(order);
         getUserData(order.customerID);
       }
     }
@@ -75,7 +78,13 @@ class _CancelledScreenState extends State<CancelledScreen> {
 
   getUserData(String customersID) async {
     var customer = Customers(
-        id: "", fullName: "", email: "", address: "", phoneNumber: "");
+        id: "",
+        fullName: "",
+        email: "",
+        address: "",
+        phoneNumber: "",
+        lat: 0,
+        long: 0);
     var data = await FirebaseFirestore.instance
         .collection("Users")
         .doc(customersID)
@@ -87,8 +96,15 @@ class _CancelledScreenState extends State<CancelledScreen> {
         customer.email = data["email"];
         customer.address = data["address"];
         customer.phoneNumber = data["phoneNumber"];
+        customer.lat = data["lat"];
+        customer.long = data["long"];
       });
       customersDetail.add(customer);
+      if (customersDetail.length == HomePage.redeliveryOrders.length) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -96,20 +112,32 @@ class _CancelledScreenState extends State<CancelledScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Đơn hủy"),
-        backgroundColor: MColors.lightRed,
+        title: const Text("Tạm hoãn"),
+        backgroundColor: MColors.yelow,
       ),
       backgroundColor: MColors.background,
       body: !isLoading
           ? ListView.builder(
-              itemCount: HomePage.cancelledOrders.length,
+              itemCount: HomePage.redeliveryOrders.length,
               itemBuilder: (context, index) {
-                return orderShortInfo(
-                  cancelledOrdersDetail[index].iD,
-                  customersDetail[index].fullName,
-                  cancelledOrdersDetail[index].cancelReason!,
-                  cancelledOrdersDetail[index].totalAmount,
-                  cancelledOrdersDetail[index].redeliveryDate!,
+                return GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => RedeliveryDetailScreen(
+                        order: redeliveryOrdersDetail[index],
+                        customer: customersDetail[index],
+                      ),
+                    ),
+                  ),
+                  child: orderShortInfo(
+                    redeliveryOrdersDetail[index].iD,
+                    customersDetail[index].fullName,
+                    redeliveryOrdersDetail[index].status,
+                    redeliveryOrdersDetail[index].delayReason!,
+                    redeliveryOrdersDetail[index].totalAmount,
+                    redeliveryOrdersDetail[index].redeliveryDate!,
+                  ),
                 );
               },
             )
@@ -119,8 +147,8 @@ class _CancelledScreenState extends State<CancelledScreen> {
     );
   }
 
-  Widget orderShortInfo(String orderID, String customeName, String cancelReason,
-      String totalAmount, String redeliveryDate) {
+  Widget orderShortInfo(String orderID, String customeName, String status,
+      String delayReason, String totalAmount, String redeliveryDate) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
@@ -163,7 +191,11 @@ class _CancelledScreenState extends State<CancelledScreen> {
                   const SizedBox(height: 10),
                   mText("Khách hàng:", customeName),
                   const SizedBox(height: 10),
-                  mText("Lý do:", cancelReason),
+                  mText("Trạng thái:", status),
+                  const SizedBox(height: 10),
+                  mText("Lý do:", delayReason),
+                  const SizedBox(height: 10),
+                  mText("Ngày giao lại:", redeliveryDate),
                 ],
               ),
             ),

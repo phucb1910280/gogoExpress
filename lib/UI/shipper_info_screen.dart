@@ -87,16 +87,63 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
                       child: userAvt(snapshot.data["profileImg"]),
                     ),
                     const SizedBox(height: 30),
-                    mText("Họ tên:", snapshot.data["fullName"]),
-                    mText("Ngày sinh:", snapshot.data["dayOfBirth"]),
-                    mText("Giới tính:", snapshot.data["gender"]),
-                    mText("CCCD:", snapshot.data["cccd"]),
-                    mText("Số điện thoại:", snapshot.data["phoneNumber"]),
-                    mText("Email:", snapshot.data["email"]),
-                    mText("Đ/c tạm trú:", snapshot.data["secondAddress"]),
-                    mText("Đ/c thường trú:", snapshot.data["mainAddress"]),
-                    mText("Bưu cục:", snapshot.data["postOffice"]),
-                    mText("Ngày tham gia:", snapshot.data["joinDay"]),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: MColors.lightBlue.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        child: Column(
+                          children: [
+                            mText("Họ tên:", snapshot.data["fullName"]),
+                            mText("Ngày sinh:", snapshot.data["dayOfBirth"]),
+                            mText("Giới tính:", snapshot.data["gender"]),
+                            mText("CCCD:", snapshot.data["cccd"]),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: MColors.lightBlue.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        child: Column(
+                          children: [
+                            mText(
+                                "Số điện thoại:", snapshot.data["phoneNumber"]),
+                            mText("Email:", snapshot.data["email"]),
+                            mText(
+                                "Đ/c tạm trú:", snapshot.data["secondAddress"]),
+                            mText("Đ/c thường trú:",
+                                snapshot.data["mainAddress"]),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: MColors.lightBlue.withOpacity(.15),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 15, vertical: 10),
+                        child: Column(
+                          children: [
+                            mText("Bưu cục:", snapshot.data["postOffice"]),
+                            mText("Ngày tham gia:", snapshot.data["joinDay"]),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -161,34 +208,37 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
   Widget mText(String title, String content) {
     return Column(
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(width: 20),
-            Flexible(
-              child: Text(
-                content,
-                textAlign: TextAlign.right,
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
                 style: const TextStyle(
-                  fontSize: 20,
-                  color: MColors.darkBlue,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Colors.black,
                 ),
               ),
-            ),
-          ],
+              const SizedBox(width: 20),
+              Flexible(
+                child: Text(
+                  content,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: MColors.darkBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        const SizedBox(
-          height: 15,
-        ),
+        // const SizedBox(
+        //   height: 15,
+        // ),
       ],
     );
   }

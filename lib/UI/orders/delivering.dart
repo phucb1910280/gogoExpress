@@ -22,16 +22,19 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
 
   @override
   void initState() {
-    getOrderData();
-    Timer(const Duration(milliseconds: 500), () {
-      setState(() {
-        isLoading = false;
-      });
-    });
     super.initState();
+    resetList();
+    getOrderData();
   }
 
-  getOrderData() async {
+  void resetList() {
+    setState(() {
+      DeliveringScreen.deliveringOrdersDetail = [];
+      DeliveringScreen.customersDetail = [];
+    });
+  }
+
+  Future<void> getOrderData() async {
     for (var element in HomePage.deliveringOrders) {
       var order = Orders(
         iD: "",
@@ -47,6 +50,7 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
         deliveredImg: "",
         payments: "",
         paymentStatus: "",
+        supplierID: '',
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -67,6 +71,8 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
           order.deliveredImg = data["deliveredImg"];
           order.payments = data["payments"];
           order.paymentStatus = data["paymentStatus"];
+          order.isNewOrder = data["isNewOrder"];
+          order.supplierID = data["supplierID"];
         });
         DeliveringScreen.deliveringOrdersDetail.add(order);
         getUserData(order.customerID);
@@ -74,12 +80,30 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
     }
   }
 
-  getUserData(String customersID) async {
+  Future<void> markAsRead(int index) async {
+    setState(() {
+      DeliveringScreen.deliveringOrdersDetail[index].isNewOrder = false;
+    });
+    await FirebaseFirestore.instance
+        .collection("Orders")
+        .doc(DeliveringScreen.deliveringOrdersDetail[index].iD)
+        .update({
+      "isNewOrder": false,
+    });
+  }
+
+  Future<void> getUserData(String customerID) async {
     var customer = Customers(
-        id: "", fullName: "", email: "", address: "", phoneNumber: "");
+        id: "",
+        fullName: "",
+        email: "",
+        address: "",
+        phoneNumber: "",
+        lat: 0,
+        long: 0);
     var data = await FirebaseFirestore.instance
         .collection("Users")
-        .doc(customersID)
+        .doc(customerID)
         .get();
     if (data.exists) {
       setState(() {
@@ -88,8 +112,16 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
         customer.email = data["email"];
         customer.address = data["address"];
         customer.phoneNumber = data["phoneNumber"];
+        customer.lat = data["lat"];
+        customer.long = data["long"];
       });
       DeliveringScreen.customersDetail.add(customer);
+      if (DeliveringScreen.customersDetail.length ==
+          HomePage.deliveringOrders.length) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -106,16 +138,22 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
               itemCount: HomePage.deliveringOrders.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DeliveringDetailScreen(
-                        order: DeliveringScreen.deliveringOrdersDetail[index],
-                        customer: DeliveringScreen.customersDetail[index],
+                  onTap: () async {
+                    markAsRead(index).then(
+                      (value) => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DeliveringDetailScreen(
+                            order:
+                                DeliveringScreen.deliveringOrdersDetail[index],
+                            customer: DeliveringScreen.customersDetail[index],
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                   child: orderShortInfo(
+                    DeliveringScreen.deliveringOrdersDetail[index].isNewOrder!,
                     DeliveringScreen.deliveringOrdersDetail[index].iD,
                     DeliveringScreen.customersDetail[index].fullName,
                     DeliveringScreen.customersDetail[index].address,
@@ -130,7 +168,7 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
     );
   }
 
-  Widget orderShortInfo(String orderID, String customeName,
+  Widget orderShortInfo(bool isNewOrder, String orderID, String customeName,
       String customerAddress, String totalAmount) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
@@ -164,6 +202,27 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  isNewOrder
+                      ? const Row(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 20,
+                              color: Colors.green,
+                            ),
+                            SizedBox(width: 10),
+                            Text(
+                              "Đơn mới",
+                              style: TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        )
+                      : const SizedBox(),
+                  SizedBox(height: isNewOrder ? 15 : 0),
                   mText("Mã đơn:", orderID),
                   const SizedBox(height: 10),
                   mText(

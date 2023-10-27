@@ -1,18 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gogoship/UI/orders/cancelled.dart';
-import 'package:gogoship/UI/orders/delayed.dart';
+import 'package:geolocator/geolocator.dart' as geo;
+import 'package:gogoship/UI/orders/taking.dart';
+import 'package:gogoship/UI/orders/redelivery.dart';
 import 'package:gogoship/UI/orders/delivered.dart';
 import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/UI/shipper_info_screen.dart';
 import 'package:gogoship/shared/mcolors.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:location/location.dart';
+// import 'package:location/location.dart';
 
 class HomePage extends StatefulWidget {
   static List<String> deliveringOrders = <String>[];
-  static List<String> delayedOrders = <String>[];
-  static List<String> cancelledOrders = <String>[];
-  static List<String> delivered = <String>[];
+  static List<String> redeliveryOrders = <String>[];
+  static List<String> takingOrders = <String>[];
+  static List<String> deliveredOrders = <String>[];
+  static var myLocation = const LatLng(0, 0);
   const HomePage({super.key});
 
   @override
@@ -24,6 +29,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    checkPermission();
+    getCurrentPosition();
     var day = DateTime.now();
     setState(() {
       today = "${day.day}-${day.month}-${day.year}";
@@ -32,16 +39,30 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
+  checkPermission() async {
+    final location = Location();
+    final hasPermissions = await location.hasPermission();
+    if (hasPermissions != PermissionStatus.granted) {
+      await location.requestPermission().then((value) => getCurrentPosition());
+    }
+  }
+
+  getCurrentPosition() async {
+    geo.Position position = await geo.Geolocator.getCurrentPosition(
+        desiredAccuracy: geo.LocationAccuracy.high);
+    HomePage.myLocation = LatLng(position.latitude, position.longitude);
+  }
+
   getOrderData() async {
-    var delivering = await FirebaseFirestore.instance
+    var data = await FirebaseFirestore.instance
         .collection("Shippers")
         .doc(FirebaseAuth.instance.currentUser!.email)
         .get();
     setState(() {
-      HomePage.deliveringOrders = List.from(delivering["deliveringOrders"]);
-      HomePage.cancelledOrders = List.from(delivering["cancelledOrders"]);
-      HomePage.delayedOrders = List.from(delivering["delayedOrders"]);
-      HomePage.delivered = List.from(delivering["delivered"]);
+      HomePage.deliveringOrders = List.from(data["deliveringOrders"]);
+      HomePage.takingOrders = List.from(data["takingOrders"]);
+      HomePage.redeliveryOrders = List.from(data["redeliveryOrders"]);
+      HomePage.deliveredOrders = List.from(data["deliveredOrders"]);
     });
   }
 
@@ -126,21 +147,21 @@ class _HomePageState extends State<HomePage> {
                       Row(
                         children: [
                           orderGridItems(
-                            "Đã giao",
-                            HomePage.delivered.length.toString(),
+                            "Đang\nlấy",
+                            HomePage.takingOrders.length.toString(),
+                            MColors.lightPink,
+                            MColors.lightPurple,
+                            MColors.white,
+                            const TakingOrdersScreen(),
+                          ),
+                          const SizedBox(width: 15),
+                          orderGridItems(
+                            "Đã\ngiao",
+                            HomePage.deliveredOrders.length.toString(),
                             MColors.lightGreen,
                             MColors.green,
                             MColors.white,
                             const DeliveredScreen(),
-                          ),
-                          const SizedBox(width: 15),
-                          orderGridItems(
-                            "Đang giao",
-                            HomePage.deliveringOrders.length.toString(),
-                            MColors.lightBlue,
-                            MColors.blue,
-                            MColors.white,
-                            const DeliveringScreen(),
                           ),
                         ],
                       ),
@@ -148,30 +169,31 @@ class _HomePageState extends State<HomePage> {
                       Row(
                         children: [
                           orderGridItems(
-                            "Tạm hoãn",
-                            HomePage.delayedOrders.length.toString(),
-                            MColors.yelow,
-                            MColors.orange,
+                            "Đang\ngiao",
+                            HomePage.deliveringOrders.length.toString(),
+                            MColors.lightBlue,
+                            MColors.blue,
                             MColors.white,
-                            const DelayedScreen(),
+                            const DeliveringScreen(),
                           ),
                           const SizedBox(width: 15),
                           orderGridItems(
-                            "Đã hủy",
-                            HomePage.cancelledOrders.length.toString(),
-                            MColors.lightRed,
-                            MColors.red,
+                            "Giao\nlại",
+                            HomePage.redeliveryOrders.length.toString(),
+                            MColors.yelow,
+                            MColors.orange,
                             MColors.white,
-                            const CancelledScreen(),
+                            const RedeliveryScreen(),
                           ),
                         ],
                       ),
+                      const SizedBox(height: 15),
                     ],
                   ),
                 ),
               );
             } else {
-              return const CircularProgressIndicator();
+              return const Center(child: CircularProgressIndicator());
             }
           },
         ),
@@ -213,6 +235,7 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.symmetric(vertical: 15),
                 child: Text(
                   title,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 22,
                     color: textColor,
