@@ -66,6 +66,10 @@ class _DeliveredDetailScreenState extends State<DeliveredDetailScreen> {
                             mText("Ngày đặt hàng:", widget.order.orderDay),
                             mText("Trạng thái ĐH:", widget.order.status,
                                 bold: true),
+                            mText(
+                              "Ngày giao hàng:",
+                              widget.order.deliveredDay.toString(),
+                            )
                           ],
                         ),
                       ),

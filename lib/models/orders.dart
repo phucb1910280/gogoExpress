@@ -3,12 +3,14 @@ class Orders {
   String customerID;
   String? deliverID;
   String orderDay;
+  String? deliveredDay;
   String status;
   String totalAmount;
   String transportFee;
   String? delayReason;
   String? cancelReason;
   String? redeliveryDate;
+  String reTakingDay;
   String? deliveredImg;
   String? getOrderImg;
   String payments;
@@ -21,6 +23,7 @@ class Orders {
     required this.customerID,
     this.deliverID,
     required this.orderDay,
+    this.deliveredDay,
     required this.status,
     required this.totalAmount,
     required this.transportFee,
@@ -28,6 +31,7 @@ class Orders {
     this.delayReason,
     this.redeliveryDate,
     this.deliveredImg,
+    required this.reTakingDay,
     required this.payments,
     required this.paymentStatus,
     this.isNewOrder,

@@ -24,6 +24,11 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
   void initState() {
     super.initState();
     resetList();
+    if (HomePage.deliveringOrders.isEmpty) {
+      setState(() {
+        isLoading = false;
+      });
+    }
     getOrderData();
   }
 
@@ -51,6 +56,8 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
         payments: "",
         paymentStatus: "",
         supplierID: '',
+        deliveredDay: '',
+        reTakingDay: '',
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -62,6 +69,7 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
           order.customerID = data["customerID"];
           order.deliverID = data["deliverID"];
           order.orderDay = data["orderDay"];
+          order.deliveredDay = data["deliveredDay"];
           order.status = data["status"];
           order.totalAmount = data["totalAmount"].toString();
           order.transportFee = data["transportFee"].toString();
@@ -69,6 +77,7 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
           order.delayReason = data["delayReason"];
           order.redeliveryDate = data["redeliveryDate"];
           order.deliveredImg = data["deliveredImg"];
+          order.reTakingDay = data["reTakingDay"];
           order.payments = data["payments"];
           order.paymentStatus = data["paymentStatus"];
           order.isNewOrder = data["isNewOrder"];
@@ -134,34 +143,45 @@ class _DeliveringScreenState extends State<DeliveringScreen> {
       ),
       backgroundColor: MColors.background,
       body: !isLoading
-          ? ListView.builder(
-              itemCount: HomePage.deliveringOrders.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () async {
-                    markAsRead(index).then(
-                      (value) => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DeliveringDetailScreen(
-                            order:
-                                DeliveringScreen.deliveringOrdersDetail[index],
-                            customer: DeliveringScreen.customersDetail[index],
+          ? DeliveringScreen.deliveringOrdersDetail.isNotEmpty
+              ? ListView.builder(
+                  itemCount: HomePage.deliveringOrders.length,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () async {
+                        markAsRead(index).then(
+                          (value) => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => DeliveringDetailScreen(
+                                order: DeliveringScreen
+                                    .deliveringOrdersDetail[index],
+                                customer:
+                                    DeliveringScreen.customersDetail[index],
+                              ),
+                            ),
                           ),
-                        ),
+                        );
+                      },
+                      child: orderShortInfo(
+                        DeliveringScreen
+                            .deliveringOrdersDetail[index].isNewOrder!,
+                        DeliveringScreen.deliveringOrdersDetail[index].iD,
+                        DeliveringScreen.customersDetail[index].fullName,
+                        DeliveringScreen.customersDetail[index].address,
+                        DeliveringScreen
+                            .deliveringOrdersDetail[index].totalAmount,
                       ),
                     );
                   },
-                  child: orderShortInfo(
-                    DeliveringScreen.deliveringOrdersDetail[index].isNewOrder!,
-                    DeliveringScreen.deliveringOrdersDetail[index].iD,
-                    DeliveringScreen.customersDetail[index].fullName,
-                    DeliveringScreen.customersDetail[index].address,
-                    DeliveringScreen.deliveringOrdersDetail[index].totalAmount,
+                )
+              : const Center(
+                  child: Text(
+                  "Danh sách rỗng",
+                  style: TextStyle(
+                    fontSize: 20,
                   ),
-                );
-              },
-            )
+                ))
           : const Center(
               child: CircularProgressIndicator(),
             ),

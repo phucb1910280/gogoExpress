@@ -1,37 +1,53 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
-import 'package:gogoship/UI/orders_detail/redelivery_detail.dart';
-import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
+import 'package:gogoship/models/suppliers.dart';
 import 'package:gogoship/shared/mcolors.dart';
-import 'package:intl/intl.dart';
 
-class RedeliveryScreen extends StatefulWidget {
-  const RedeliveryScreen({super.key});
+class ImportOrders extends StatefulWidget {
+  const ImportOrders({super.key});
 
   @override
-  State<RedeliveryScreen> createState() => _RedeliveryScreenState();
+  State<ImportOrders> createState() => _ImportOrdersState();
 }
 
-class _RedeliveryScreenState extends State<RedeliveryScreen> {
-  List<Orders> redeliveryOrdersDetail = [];
-  List<Customers> customersDetail = [];
+class _ImportOrdersState extends State<ImportOrders> {
+  List<Orders> importOrdersDetail = [];
+  List<Suppliers> supplierDetail = [];
   bool isLoading = true;
 
   @override
   void initState() {
-    if (HomePage.redeliveryOrders.isEmpty) {
+    resetList();
+    getImportData();
+    getOrderData();
+    Timer(const Duration(seconds: 1), () {
       setState(() {
         isLoading = false;
       });
-    }
-    getOrderData();
+    });
     super.initState();
   }
 
+  resetList() {
+    importOrdersDetail = [];
+    supplierDetail = [];
+  }
+
+  getImportData() async {
+    var todayData = await FirebaseFirestore.instance
+        .collection("Shippers")
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .get();
+    HomePage.importOrders = List.from(todayData["importOrders"]);
+  }
+
   getOrderData() async {
-    for (var element in HomePage.redeliveryOrders) {
+    for (var element in HomePage.importOrders) {
       var order = Orders(
         iD: "",
         customerID: "",
@@ -46,7 +62,7 @@ class _RedeliveryScreenState extends State<RedeliveryScreen> {
         deliveredImg: "",
         payments: "",
         paymentStatus: "",
-        supplierID: '',
+        supplierID: "",
         deliveredDay: '',
         reTakingDay: '',
       );
@@ -60,9 +76,9 @@ class _RedeliveryScreenState extends State<RedeliveryScreen> {
           order.customerID = data["customerID"];
           order.deliverID = data["deliverID"];
           order.orderDay = data["orderDay"];
-          order.reTakingDay = data["reTakingDay"];
           order.deliveredDay = data["deliveredDay"];
           order.status = data["status"];
+          order.reTakingDay = data["reTakingDay"];
           order.totalAmount = data["totalAmount"].toString();
           order.transportFee = data["transportFee"].toString();
           order.cancelReason = data["cancelReason"];
@@ -71,40 +87,39 @@ class _RedeliveryScreenState extends State<RedeliveryScreen> {
           order.deliveredImg = data["deliveredImg"];
           order.payments = data["payments"];
           order.paymentStatus = data["paymentStatus"];
-          order.isNewOrder = data["isNewOrder"];
           order.supplierID = data["supplierID"];
         });
-        redeliveryOrdersDetail.add(order);
-        getUserData(order.customerID);
+        importOrdersDetail.add(order);
+        getUserData(order.supplierID);
       }
     }
   }
 
-  getUserData(String customersID) async {
-    var customer = Customers(
+  getUserData(String supplierID) async {
+    var supplier = Suppliers(
         id: "",
-        fullName: "",
+        brand: "",
         email: "",
         address: "",
         phoneNumber: "",
-        lat: 0,
-        long: 0);
+        long: 0,
+        lat: 0);
     var data = await FirebaseFirestore.instance
-        .collection("Users")
-        .doc(customersID)
+        .collection("Suppliers")
+        .doc(supplierID)
         .get();
     if (data.exists) {
       setState(() {
-        customer.id = data["id"];
-        customer.fullName = data["fullName"];
-        customer.email = data["email"];
-        customer.address = data["address"];
-        customer.phoneNumber = data["phoneNumber"];
-        customer.lat = data["lat"];
-        customer.long = data["long"];
+        supplier.id = data["id"];
+        supplier.brand = data["brand"];
+        supplier.email = data["email"];
+        supplier.address = data["address"];
+        supplier.phoneNumber = data["phoneNumber"];
+        supplier.lat = data["lat"];
+        supplier.long = data["long"];
       });
-      customersDetail.add(customer);
-      if (customersDetail.length == HomePage.redeliveryOrders.length) {
+      supplierDetail.add(supplier);
+      if (supplierDetail.length == HomePage.importOrders.length) {
         setState(() {
           isLoading = false;
         });
@@ -116,33 +131,27 @@ class _RedeliveryScreenState extends State<RedeliveryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Đơn hẹn giao"),
-        backgroundColor: MColors.yelow,
+        title: const Text("Chờ nhập kho"),
+        backgroundColor: MColors.lightOrange,
+        leading: IconButton(
+          onPressed: () => Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const HomePage()),
+              (route) => false),
+          icon: const Icon(Icons.arrow_back),
+        ),
       ),
       backgroundColor: MColors.background,
-      body: !isLoading
-          ? redeliveryOrdersDetail.isNotEmpty
+      body: isLoading == false
+          ? importOrdersDetail.isNotEmpty
               ? ListView.builder(
-                  itemCount: HomePage.redeliveryOrders.length,
+                  itemCount: importOrdersDetail.length,
                   itemBuilder: (context, index) {
-                    return GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => RedeliveryDetailScreen(
-                            order: redeliveryOrdersDetail[index],
-                            customer: customersDetail[index],
-                          ),
-                        ),
-                      ),
-                      child: orderShortInfo(
-                        redeliveryOrdersDetail[index].iD,
-                        customersDetail[index].fullName,
-                        redeliveryOrdersDetail[index].status,
-                        redeliveryOrdersDetail[index].delayReason!,
-                        redeliveryOrdersDetail[index].totalAmount,
-                        redeliveryOrdersDetail[index].redeliveryDate!,
-                      ),
+                    return orderShortInfo(
+                      importOrdersDetail[index].iD,
+                      supplierDetail[index].brand,
+                      importOrdersDetail[index].status,
+                      index,
                     );
                   },
                 )
@@ -159,8 +168,8 @@ class _RedeliveryScreenState extends State<RedeliveryScreen> {
     );
   }
 
-  Widget orderShortInfo(String orderID, String customeName, String status,
-      String delayReason, String totalAmount, String redeliveryDate) {
+  Widget orderShortInfo(
+      String orderID, String brand, String status, int index) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
@@ -195,19 +204,11 @@ class _RedeliveryScreenState extends State<RedeliveryScreen> {
                 children: [
                   mText("Mã đơn:", orderID),
                   const SizedBox(height: 10),
-                  mText(
-                      "Tổng tiền:",
-                      NumberFormat.simpleCurrency(
-                              locale: 'vi-VN', decimalDigits: 0)
-                          .format(double.parse(totalAmount))),
+                  mText("Cửa hàng:", brand),
                   const SizedBox(height: 10),
-                  mText("Khách hàng:", customeName),
+                  mText("Tình trạng:", status),
                   const SizedBox(height: 10),
-                  mText("Trạng thái:", status),
-                  const SizedBox(height: 10),
-                  mText("Lý do:", delayReason),
-                  const SizedBox(height: 10),
-                  mText("Ngày giao lại:", redeliveryDate),
+                  importButton(orderID, index),
                 ],
               ),
             ),
@@ -244,6 +245,50 @@ class _RedeliveryScreenState extends State<RedeliveryScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget importButton(String orderID, int index) {
+    return ElevatedButton(
+      onPressed: () async {
+        setState(() {
+          isLoading = true;
+        });
+        List changeStatusOrder = [orderID];
+        try {
+          importOrdersDetail.removeAt(index);
+          supplierDetail.removeAt(index);
+          await FirebaseFirestore.instance
+              .collection("Orders")
+              .doc(orderID)
+              .update({
+            "status": "Đã nhập kho",
+          });
+          await FirebaseFirestore.instance
+              .collection("Shippers")
+              .doc(FirebaseAuth.instance.currentUser!.email)
+              .update({
+            "importOrders": FieldValue.arrayRemove(changeStatusOrder),
+          }).then((value) {
+            setState(() {
+              isLoading = false;
+            });
+          });
+        } catch (e) {
+          debugPrint(e.toString());
+        }
+      },
+      style: ElevatedButton.styleFrom(
+        backgroundColor: MColors.lightOrange,
+        foregroundColor: MColors.white,
+        minimumSize: const Size.fromHeight(55),
+      ),
+      child: const Text(
+        "Nhập hàng",
+        style: TextStyle(
+          fontSize: 20,
+        ),
+      ),
     );
   }
 }

@@ -46,6 +46,8 @@ class _TakingOrdersScreenState extends State<TakingOrdersScreen> {
         payments: "",
         paymentStatus: "",
         supplierID: "",
+        deliveredDay: '',
+        reTakingDay: '',
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -57,6 +59,7 @@ class _TakingOrdersScreenState extends State<TakingOrdersScreen> {
           order.customerID = data["customerID"];
           order.deliverID = data["deliverID"];
           order.orderDay = data["orderDay"];
+          order.deliveredDay = data["deliveredDay"];
           order.status = data["status"];
           order.totalAmount = data["totalAmount"].toString();
           order.transportFee = data["transportFee"].toString();
@@ -66,6 +69,7 @@ class _TakingOrdersScreenState extends State<TakingOrdersScreen> {
           order.deliveredImg = data["deliveredImg"];
           order.payments = data["payments"];
           order.paymentStatus = data["paymentStatus"];
+          order.reTakingDay = data["reTakingDay"];
           order.supplierID = data["supplierID"];
         });
         takingOrdersDetail.add(order);
@@ -74,7 +78,7 @@ class _TakingOrdersScreenState extends State<TakingOrdersScreen> {
     }
   }
 
-  getUserData(String customersID) async {
+  getUserData(String supplierID) async {
     var supplier = Suppliers(
         id: "",
         brand: "",
@@ -85,7 +89,7 @@ class _TakingOrdersScreenState extends State<TakingOrdersScreen> {
         lat: 0);
     var data = await FirebaseFirestore.instance
         .collection("Suppliers")
-        .doc(customersID)
+        .doc(supplierID)
         .get();
     if (data.exists) {
       setState(() {
@@ -111,32 +115,40 @@ class _TakingOrdersScreenState extends State<TakingOrdersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Đang lấy"),
-        backgroundColor: MColors.lightPink,
+        backgroundColor: MColors.pink,
       ),
       backgroundColor: MColors.background,
       body: !isLoading
-          ? ListView.builder(
-              itemCount: HomePage.takingOrders.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => TakingOrderDetailScreen(
-                        order: takingOrdersDetail[index],
-                        suppliers: supplierDetail[index],
+          ? takingOrdersDetail.isNotEmpty
+              ? ListView.builder(
+                  itemCount: HomePage.takingOrders.length,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TakingOrderDetailScreen(
+                            order: takingOrdersDetail[index],
+                            suppliers: supplierDetail[index],
+                          ),
+                        ),
                       ),
-                    ),
+                      child: orderShortInfo(
+                        takingOrdersDetail[index].iD,
+                        supplierDetail[index].brand,
+                        supplierDetail[index].phoneNumber,
+                        supplierDetail[index].address,
+                      ),
+                    );
+                  },
+                )
+              : const Center(
+                  child: Text(
+                  "Danh sách rỗng",
+                  style: TextStyle(
+                    fontSize: 20,
                   ),
-                  child: orderShortInfo(
-                    takingOrdersDetail[index].iD,
-                    supplierDetail[index].brand,
-                    supplierDetail[index].phoneNumber,
-                    supplierDetail[index].address,
-                  ),
-                );
-              },
-            )
+                ))
           : const Center(
               child: CircularProgressIndicator(),
             ),

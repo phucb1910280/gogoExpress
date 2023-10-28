@@ -35,7 +35,7 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
   int delayChoice = 1;
   String delayReason = 'NCC chưa có hàng';
   bool responsibility = false;
-  String redeliveryDay = "";
+  String reTakingDay = "";
 
   @override
   void initState() {
@@ -43,7 +43,7 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
     var t = DateTime.now();
     String tommorrow = "${t.day + 1}/${t.month}/${t.year}";
     setState(() {
-      redeliveryDay = tommorrow;
+      reTakingDay = tommorrow;
     });
     super.initState();
   }
@@ -57,7 +57,7 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
     ).then((dateTime) {
       if (dateTime != null) {
         setState(() {
-          redeliveryDay = DateFormat('dd/MM/yyyy').format(dateTime);
+          reTakingDay = DateFormat('dd/MM/yyyy').format(dateTime);
         });
       }
     });
@@ -69,6 +69,44 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
       await launchUrl(url);
     } else {
       throw 'Could not launch $url';
+    }
+  }
+
+  Future<void> confirmDelay() async {
+    if (responsibility) {
+      onSaving();
+      try {
+        await FirebaseFirestore.instance
+            .collection("Orders")
+            .doc(widget.order.iD)
+            .update({
+          "reTakingDay": reTakingDay,
+          "delayReason": delayReason,
+          "status": "Delay lấy hàng",
+        });
+        setState(() {
+          HomePage.takingOrders = [];
+        });
+        List changeStatusOrder = [widget.order.iD];
+        await FirebaseFirestore.instance
+            .collection("Shippers")
+            .doc(FirebaseAuth.instance.currentUser!.email)
+            .update({
+          "reTakingOrders": FieldValue.arrayUnion(changeStatusOrder),
+          "takingOrders": FieldValue.arrayRemove(changeStatusOrder),
+        }).then((value) {
+          setState(() {
+            isLoading = false;
+          });
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+            (route) => false,
+          );
+        });
+      } catch (e) {
+        debugPrint(e.toString());
+      }
     }
   }
 
@@ -269,7 +307,7 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
                             child: dalayReason('NCC hẹn ngày lấy', 2),
                           ),
                           const SizedBox(height: 10),
-                          mText("Ngày lấy:", redeliveryDay,
+                          mText("Ngày lấy:", reTakingDay,
                               bold: true, fontSize: 24),
                           const SizedBox(height: 15),
                           SizedBox(
@@ -291,25 +329,59 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
                                 : null,
                           ),
                           const SizedBox(height: 15),
+                          CheckboxListTile(
+                            title: Text.rich(
+                              TextSpan(
+                                children: [
+                                  const TextSpan(
+                                    text:
+                                        'Tôi hoàn toàn chịu trách nhiệm về yêu cầu hoãn đơn hàng',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: ' ${widget.order.iD}',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      color: MColors.darkBlue,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            value: responsibility,
+                            activeColor: MColors.yelow,
+                            onChanged: (newValue) {
+                              setState(() {
+                                responsibility = !responsibility;
+                              });
+                            },
+                            controlAffinity: ListTileControlAffinity.leading,
+                          ),
+                          const SizedBox(height: 15),
                         ],
                       )
                     : const SizedBox(),
               ),
               ElevatedButton(
                 onPressed: () {
-                  tookImg == false
+                  hideDelayRequest
                       ? setState(() {
-                          hideDelayRequest = !hideDelayRequest;
+                          hideDelayRequest = false;
                         })
-                      : null;
+                      : responsibility
+                          ? confirmDelay()
+                          : null;
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.black,
-                  backgroundColor: tookImg ? Colors.grey : MColors.yelow,
+                  backgroundColor: MColors.yelow,
                   minimumSize: const Size.fromHeight(55),
                 ),
                 child: Text(
-                  hideDelayRequest ? "Yêu cầu hoãn đơn" : "Hủy",
+                  hideDelayRequest ? "Yêu cầu hoãn đơn" : "Hoãn đơn",
                   style: const TextStyle(
                     fontSize: 20,
                   ),
@@ -374,6 +446,9 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
       final ref = FirebaseStorage.instance.ref().child(path);
       await ref.putFile(File(file!.path));
       String imgUrl = await ref.getDownloadURL();
+      List changeStatusOrder = [widget.order.iD];
+      var d = DateTime.now();
+      String docID = "${d.year}_${d.month}_orders";
       try {
         await FirebaseFirestore.instance
             .collection("Orders")
@@ -382,15 +457,23 @@ class _TakingOrderDetailScreenState extends State<TakingOrderDetailScreen> {
           "getOrderImg": imgUrl,
           "status": "Đã lấy hàng",
         });
+        await FirebaseFirestore.instance
+            .collection("Shippers")
+            .doc(FirebaseAuth.instance.currentUser!.email)
+            .collection("History")
+            .doc(docID)
+            .update({
+          "allGotOrders": FieldValue.arrayUnion(changeStatusOrder),
+        });
         setState(() {
           HomePage.takingOrders = [];
         });
-        List changeStatusOrder = [widget.order.iD];
         await FirebaseFirestore.instance
             .collection("Shippers")
             .doc(FirebaseAuth.instance.currentUser!.email)
             .update({
           "takingOrders": FieldValue.arrayRemove(changeStatusOrder),
+          "importOrders": FieldValue.arrayUnion(changeStatusOrder),
         }).then((value) {
           setState(() {
             isLoading = false;

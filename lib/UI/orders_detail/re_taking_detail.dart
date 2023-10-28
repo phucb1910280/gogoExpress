@@ -3,30 +3,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
-import 'package:gogoship/models/customers.dart';
 import 'package:gogoship/models/orders.dart';
+import 'package:gogoship/models/suppliers.dart';
 import 'package:gogoship/shared/mcolors.dart';
-import 'package:intl/intl.dart';
 
-class RedeliveryDetailScreen extends StatefulWidget {
+class RetakingDetailScreen extends StatefulWidget {
   final Orders order;
-  final Customers customer;
-  const RedeliveryDetailScreen(
-      {super.key, required this.order, required this.customer});
+  final Suppliers supplier;
+  const RetakingDetailScreen(
+      {super.key, required this.order, required this.supplier});
 
   @override
-  State<RedeliveryDetailScreen> createState() => _RedeliveryDetailScreenState();
+  State<RetakingDetailScreen> createState() => _RetakingDetailScreenState();
 }
 
-class _RedeliveryDetailScreenState extends State<RedeliveryDetailScreen> {
-  double s = 0;
-  double t = 0;
+class _RetakingDetailScreenState extends State<RetakingDetailScreen> {
   bool isLoading = true;
 
   @override
   void initState() {
-    s = double.parse(widget.order.transportFee);
-    t = double.parse(widget.order.totalAmount);
     Timer(const Duration(milliseconds: 500), () {
       setState(() {
         isLoading = false;
@@ -86,67 +81,10 @@ class _RedeliveryDetailScreenState extends State<RedeliveryDetailScreen> {
                         padding: const EdgeInsets.all(10),
                         child: Column(
                           children: [
-                            mText("Người nhận:", widget.customer.fullName,
+                            mText("Cửa hàng:", widget.supplier.brand,
                                 bold: true),
-                            mText("Số ĐT:", widget.customer.phoneNumber),
-                            mText("Địa chỉ:", widget.customer.address),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: MColors.blue,
-                          width: 1,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(2),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.circle,
-                                    size: 10,
-                                    color: MColors.darkBlue,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    widget.order.payments,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(2),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.circle,
-                                    size: 10,
-                                    color: MColors.darkBlue,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    widget.order.paymentStatus,
-                                    style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: MColors.darkBlue,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                            mText("Số ĐT:", widget.supplier.phoneNumber),
+                            mText("Địa chỉ:", widget.supplier.address),
                           ],
                         ),
                       ),
@@ -184,41 +122,14 @@ class _RedeliveryDetailScreenState extends State<RedeliveryDetailScreen> {
                             ),
                             const SizedBox(height: 10),
                             mText(
-                              "Ngày giao lại:",
-                              widget.order.redeliveryDate.toString(),
+                              "Ngày hẹn lấy:",
+                              widget.order.reTakingDay.toString(),
                               bold: true,
                               fontSize: 24,
                             )
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    mText(
-                      "Tạm tính:",
-                      NumberFormat.simpleCurrency(
-                              locale: 'vi-VN', decimalDigits: 0)
-                          .format(
-                        double.parse(widget.order.totalAmount),
-                      ),
-                      fontSize: 25,
-                    ),
-                    mText(
-                      "Phí vận chuyển:",
-                      NumberFormat.simpleCurrency(
-                              locale: 'vi-VN', decimalDigits: 0)
-                          .format(
-                        double.parse(widget.order.transportFee),
-                      ),
-                      fontSize: 25,
-                    ),
-                    mText(
-                      "Tổng cộng:",
-                      NumberFormat.simpleCurrency(
-                              locale: 'vi-VN', decimalDigits: 0)
-                          .format(s + t),
-                      fontSize: 25,
-                      bold: true,
                     ),
                     const SizedBox(height: 10),
                   ],
@@ -228,14 +139,14 @@ class _RedeliveryDetailScreenState extends State<RedeliveryDetailScreen> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
         child: ElevatedButton(
-          onPressed: () async => change2Delivering(),
+          onPressed: () async => change2Taking(),
           style: ElevatedButton.styleFrom(
             backgroundColor: MColors.blue,
             foregroundColor: MColors.white,
             minimumSize: const Size.fromHeight(55),
           ),
           child: const Text(
-            "Giao lại",
+            "Lấy hàng",
             style: TextStyle(
               fontSize: 20,
             ),
@@ -279,26 +190,26 @@ class _RedeliveryDetailScreenState extends State<RedeliveryDetailScreen> {
     );
   }
 
-  Future<void> change2Delivering() async {
+  Future<void> change2Taking() async {
     onSaving();
     try {
       await FirebaseFirestore.instance
           .collection("Orders")
           .doc(widget.order.iD)
           .update({
-        "status": "Đang giao hàng",
-        "redeliveryDate": "",
+        "status": "Đang lấy hàng",
+        "reTakingDay": "",
       });
       setState(() {
-        HomePage.redeliveryOrders = [];
+        HomePage.reTakingOrders = [];
       });
       List changeStatusOrder = [widget.order.iD];
       await FirebaseFirestore.instance
           .collection("Shippers")
           .doc(FirebaseAuth.instance.currentUser!.email)
           .update({
-        "redeliveryOrders": FieldValue.arrayRemove(changeStatusOrder),
-        "deliveringOrders": FieldValue.arrayUnion(changeStatusOrder),
+        "reTakingOrders": FieldValue.arrayRemove(changeStatusOrder),
+        "takingOrders": FieldValue.arrayUnion(changeStatusOrder),
       }).then((value) {
         setState(() {
           isLoading = false;

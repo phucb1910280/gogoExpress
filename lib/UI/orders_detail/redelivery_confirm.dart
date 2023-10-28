@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
-import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:intl/intl.dart';
 
@@ -16,7 +15,7 @@ class RedeliveryConfirmScreen extends StatefulWidget {
 }
 
 class _RedeliveryConfirmScreenState extends State<RedeliveryConfirmScreen> {
-  String redeliveryDay = "";
+  String redeliveryDate = "";
   bool responsibility = false;
   int choice = 1;
   String reason = 'Không liên hệ được với khách';
@@ -27,7 +26,7 @@ class _RedeliveryConfirmScreenState extends State<RedeliveryConfirmScreen> {
     var t = DateTime.now();
     String tommorrow = "${t.day + 1}/${t.month}/${t.year}";
     setState(() {
-      redeliveryDay = tommorrow;
+      redeliveryDate = tommorrow;
     });
     super.initState();
   }
@@ -41,7 +40,7 @@ class _RedeliveryConfirmScreenState extends State<RedeliveryConfirmScreen> {
     ).then((dateTime) {
       if (dateTime != null) {
         setState(() {
-          redeliveryDay = DateFormat('dd/MM/yyyy').format(dateTime);
+          redeliveryDate = DateFormat('dd/MM/yyyy').format(dateTime);
         });
       }
     });
@@ -126,7 +125,7 @@ class _RedeliveryConfirmScreenState extends State<RedeliveryConfirmScreen> {
                           TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      redeliveryDay,
+                      redeliveryDate,
                       style: const TextStyle(
                           fontSize: 22, fontWeight: FontWeight.bold),
                     ),
@@ -241,14 +240,12 @@ class _RedeliveryConfirmScreenState extends State<RedeliveryConfirmScreen> {
             .collection("Orders")
             .doc(widget.orderID)
             .update({
-          "redeliveryDate": redeliveryDay,
+          "redeliveryDate": redeliveryDate,
           "delayReason": reason,
           "status": "Tạm hoãn",
         });
         setState(() {
           HomePage.deliveringOrders = [];
-          DeliveringScreen.deliveringOrdersDetail = [];
-          DeliveringScreen.customersDetail = [];
         });
         List changeStatusOrder = [widget.orderID];
         await FirebaseFirestore.instance

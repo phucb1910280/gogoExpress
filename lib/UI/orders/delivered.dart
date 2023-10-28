@@ -18,9 +18,14 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
   List<Orders> deliveredOrdersDetail = [];
   List<Customers> customersDetail = [];
   bool isLoading = true;
+  String thisMonth = "";
 
   @override
   void initState() {
+    var t = DateTime.now();
+    setState(() {
+      thisMonth = t.month.toString();
+    });
     if (HomePage.deliveredOrders.isEmpty) {
       setState(() {
         isLoading = false;
@@ -47,6 +52,8 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
         payments: "",
         paymentStatus: "",
         supplierID: '',
+        deliveredDay: '',
+        reTakingDay: '',
       );
       var data = await FirebaseFirestore.instance
           .collection("Orders")
@@ -58,7 +65,9 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
           order.customerID = data["customerID"];
           order.deliverID = data["deliverID"];
           order.orderDay = data["orderDay"];
+          order.deliveredDay = data["deliveredDay"];
           order.status = data["status"];
+          order.reTakingDay = data["reTakingDay"];
           order.totalAmount = data["totalAmount"].toString();
           order.transportFee = data["transportFee"].toString();
           order.cancelReason = data["cancelReason"];
@@ -112,40 +121,49 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Đã giao"),
+        title: Text("Đã giao trong tháng $thisMonth"),
         backgroundColor: MColors.lightGreen2,
       ),
       backgroundColor: MColors.background,
       body: !isLoading
-          ? ListView.builder(
-              itemCount: HomePage.deliveredOrders.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DeliveredDetailScreen(
-                        order: deliveredOrdersDetail[index],
-                        customer: customersDetail[index],
+          ? deliveredOrdersDetail.isNotEmpty
+              ? ListView.builder(
+                  itemCount: HomePage.deliveredOrders.length,
+                  itemBuilder: (context, index) {
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DeliveredDetailScreen(
+                            order: deliveredOrdersDetail[index],
+                            customer: customersDetail[index],
+                          ),
+                        ),
                       ),
-                    ),
+                      child: orderShortInfo(
+                          deliveredOrdersDetail[index].iD,
+                          deliveredOrdersDetail[index].totalAmount,
+                          customersDetail[index].fullName,
+                          deliveredOrdersDetail[index].status,
+                          deliveredOrdersDetail[index].deliveredDay!),
+                    );
+                  },
+                )
+              : const Center(
+                  child: Text(
+                  "Danh sách rỗng",
+                  style: TextStyle(
+                    fontSize: 20,
                   ),
-                  child: orderShortInfo(
-                      deliveredOrdersDetail[index].iD,
-                      deliveredOrdersDetail[index].totalAmount,
-                      customersDetail[index].fullName,
-                      deliveredOrdersDetail[index].status),
-                );
-              },
-            )
+                ))
           : const Center(
               child: CircularProgressIndicator(),
             ),
     );
   }
 
-  Widget orderShortInfo(
-      String orderID, String totalAmount, String customerName, String status) {
+  Widget orderShortInfo(String orderID, String totalAmount, String customerName,
+      String status, String deliveredDay) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
       child: Column(
@@ -178,17 +196,20 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  mText("Mã đơn:", orderID),
+                  mText("Mã đơn:", orderID, bold: true),
                   const SizedBox(height: 10),
                   mText(
                       "Tổng tiền:",
                       NumberFormat.simpleCurrency(
                               locale: 'vi-VN', decimalDigits: 0)
-                          .format(double.parse(totalAmount))),
+                          .format(double.parse(totalAmount)),
+                      bold: true),
                   const SizedBox(height: 10),
                   mText("Khách hàng:", customerName),
                   const SizedBox(height: 10),
-                  mText("Trạng thái:", status),
+                  mText("Trạng thái:", status, bold: true),
+                  const SizedBox(height: 10),
+                  mText("Ngày giao:", deliveredDay),
                 ],
               ),
             ),
@@ -198,7 +219,7 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
     );
   }
 
-  Widget mText(String title, String content) {
+  Widget mText(String title, String content, {bool bold = false}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -217,10 +238,10 @@ class _DeliveredScreenState extends State<DeliveredScreen> {
           child: Text(
             content,
             textAlign: TextAlign.right,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 22,
               color: MColors.darkBlue,
-              fontWeight: FontWeight.bold,
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),

@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/UI/homepage.dart';
 import 'package:gogoship/UI/orders_detail/mymapview.dart';
 import 'package:gogoship/UI/orders_detail/redelivery_confirm.dart';
@@ -28,17 +27,32 @@ class DeliveringDetailScreen extends StatefulWidget {
 class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
   double s = 0;
   double t = 0;
+  double currentTotalReceivedToday = 0;
   XFile? file;
   String path = "";
+  String deliveredDay = "";
   bool takeImg = false;
   bool isLoading = true;
 
   @override
   void initState() {
+    var d = DateTime.now();
     s = double.parse(widget.order.transportFee);
     t = double.parse(widget.order.totalAmount);
+    deliveredDay = '${d.hour}:${d.minute}, ${d.day}/${d.month}/${d.year}';
     path = "deliveredConfirmImg/${widget.order.iD}";
+    getTotalReceivedToday();
     super.initState();
+  }
+
+  getTotalReceivedToday() async {
+    var t = await FirebaseFirestore.instance
+        .collection("Shippers")
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .get();
+    setState(() {
+      currentTotalReceivedToday = t["totalReceivedToday"];
+    });
   }
 
   makingPhoneCall(String phoneNumber) async {
@@ -369,6 +383,9 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
       final ref = FirebaseStorage.instance.ref().child(path);
       await ref.putFile(File(file!.path));
       String imgUrl = await ref.getDownloadURL();
+      var now = DateTime.now();
+      String docID = "${now.year}_${now.month}_orders";
+      List changeStatusOrder = [widget.order.iD];
       try {
         await FirebaseFirestore.instance
             .collection("Orders")
@@ -377,19 +394,25 @@ class _DeliveringDetailScreenState extends State<DeliveringDetailScreen> {
           "deliveredImg": imgUrl,
           "status": "Đã giao hàng",
           "paymentStatus": "Đã thanh toán",
+          "deliveredDay": deliveredDay,
         });
         setState(() {
           HomePage.deliveringOrders = [];
-          DeliveringScreen.customersDetail = [];
-          DeliveringScreen.deliveringOrdersDetail = [];
         });
-        List changeStatusOrder = [widget.order.iD];
+        await FirebaseFirestore.instance
+            .collection("Shippers")
+            .doc(FirebaseAuth.instance.currentUser!.email)
+            .collection("History")
+            .doc(docID)
+            .update({
+          "allDeliveredOrders": FieldValue.arrayUnion(changeStatusOrder),
+        });
         await FirebaseFirestore.instance
             .collection("Shippers")
             .doc(FirebaseAuth.instance.currentUser!.email)
             .update({
-          "deliveredOrders": FieldValue.arrayUnion(changeStatusOrder),
           "deliveringOrders": FieldValue.arrayRemove(changeStatusOrder),
+          "totalReceivedToday": s + t + currentTotalReceivedToday,
         }).then((value) {
           setState(() {
             isLoading = false;
