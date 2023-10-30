@@ -28,9 +28,7 @@ class _AllGotOrdersState extends State<AllGotOrders> {
         .get();
     int got = 0;
     for (var i = 0; i < data.docs.length; i++) {
-      // var tempGot = data.docs[i]["allGotOrders"];
       List<String> gotList = List.from(data.docs[i]["allGotOrders"]);
-      // allOrders.addAll(iterable);
       for (var element in gotList) {
         allOrders.add(element);
       }
@@ -40,8 +38,6 @@ class _AllGotOrdersState extends State<AllGotOrders> {
     setState(() {
       allGotNumber = got;
     });
-    // print(allOrders);
-    // print(allGotNumber);
   }
 
   @override

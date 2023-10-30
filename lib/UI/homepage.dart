@@ -9,6 +9,7 @@ import 'package:gogoship/UI/orders/taking.dart';
 import 'package:gogoship/UI/orders/redelivery.dart';
 import 'package:gogoship/UI/orders/delivered.dart';
 import 'package:gogoship/UI/orders/delivering.dart';
+import 'package:gogoship/UI/payment.dart';
 import 'package:gogoship/UI/shipper_info_screen.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:intl/intl.dart';
@@ -39,6 +40,17 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    refresh();
+    super.initState();
+  }
+
+  void refresh() {
+    setState(() {
+      today = "";
+      allGotLength = 0;
+      allDeliveredLength = 0;
+      total = 0;
+    });
     checkPermission();
     getCurrentPosition();
     var day = DateTime.now();
@@ -47,7 +59,6 @@ class _HomePageState extends State<HomePage> {
     });
     getTodayOrderData();
     getAllTimeOrdersData();
-    super.initState();
   }
 
   checkPermission() async {
@@ -237,7 +248,13 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   const Expanded(child: SizedBox()),
                                   IconButton(
-                                    onPressed: () {},
+                                    onPressed: () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            PaymentScreen(total: total),
+                                      ),
+                                    ),
                                     icon: const Icon(
                                       Icons.payments_rounded,
                                       color: MColors.darkBlue,
@@ -362,10 +379,7 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-            (route) => false),
+        onPressed: () => refresh(),
         child: const Icon(
           Icons.refresh,
           color: MColors.darkBlue,
