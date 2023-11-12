@@ -18,7 +18,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
         backgroundColor: MColors.lightBlue,
       ),
       backgroundColor: MColors.background,
-      body: Column(
+      body: const Column(
         children: [
           Text("Data"),
         ],

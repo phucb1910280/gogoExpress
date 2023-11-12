@@ -1,41 +1,74 @@
 class Orders {
-  String iD;
+  String orderID;
+  String supplierID;
   String customerID;
-  String? deliverID;
+  String? shipperID;
+  String? pickupStaffID;
+
   String orderDay;
-  String? deliveredDay;
+
   String status;
-  String totalAmount;
-  String transportFee;
-  String? delayReason;
-  String? cancelReason;
-  String? redeliveryDate;
-  String reTakingDay;
-  String? deliveredImg;
-  String? getOrderImg;
+
   String payments;
   String paymentStatus;
-  String supplierID;
-  bool? isNewOrder;
+
+  num orderTotal;
+  num transportFee;
+  num total;
+
+  String? delayPickupReason;
+  String? rePickupDay;
+  String? pickupImg;
+
+  String? cancelReason;
+
+  String? delayDeliveryReason;
+  String? reDeliveryDay;
+  String? suscessfullDeliveryImg;
+  String? suscessfullDeliveryDay;
+
+  bool isNewOrder;
+  List<String> deliveryHistory;
 
   Orders({
-    required this.iD,
+    required this.orderID,
+    required this.supplierID,
     required this.customerID,
-    this.deliverID,
     required this.orderDay,
-    this.deliveredDay,
     required this.status,
-    required this.totalAmount,
-    required this.transportFee,
-    this.cancelReason,
-    this.delayReason,
-    this.redeliveryDate,
-    this.deliveredImg,
-    required this.reTakingDay,
     required this.payments,
     required this.paymentStatus,
-    this.isNewOrder,
-    required this.supplierID,
-    this.getOrderImg,
+    required this.orderTotal,
+    required this.transportFee,
+    required this.total,
+    required this.deliveryHistory,
+    required this.isNewOrder,
   });
+
+  Map<String, Object?> toJson() {
+    return {
+      'orderID': orderID,
+      'customerID': customerID,
+      'supplierID': supplierID,
+      'shipperID': "",
+      'pickupStaffID': "",
+      'orderDay': orderDay,
+      'status': status,
+      'payments': payments,
+      'paymentStatus': paymentStatus,
+      'orderTotal': orderTotal,
+      'transportFee': transportFee,
+      'total': total,
+      'delayPickupReason': "",
+      'rePickupDay': "",
+      'pickupImg': "",
+      'cancelReason': "",
+      'delayDeliveryReason': "",
+      'reDeliveryDay': "",
+      'suscessfullDeliveryDay': "",
+      'suscessfullDeliveryImg': "",
+      'deliveryHistory': deliveryHistory,
+      'isNewOrder': isNewOrder,
+    };
+  }
 }

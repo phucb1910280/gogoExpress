@@ -1,23 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:gogoship/UI/order_detail/delivering_detail.dart';
+import 'package:gogoship/UI/order_detail/picking_detail.dart';
 import 'package:gogoship/shared/mcolors.dart';
 
-class DeliveringOrders extends StatefulWidget {
-  const DeliveringOrders({super.key});
+class PickingOrders extends StatefulWidget {
+  const PickingOrders({super.key});
 
   @override
-  State<DeliveringOrders> createState() => _DeliveringOrdersState();
+  State<PickingOrders> createState() => _PickingOrdersState();
 }
 
-class _DeliveringOrdersState extends State<DeliveringOrders> {
+class _PickingOrdersState extends State<PickingOrders> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Đơn đang giao"),
-        backgroundColor: MColors.lightBlue,
+        title: const Text("Đơn đang lấy"),
+        backgroundColor: MColors.lightPink,
       ),
       backgroundColor: MColors.background,
       body: Padding(
@@ -30,7 +30,7 @@ class _DeliveringOrdersState extends State<DeliveringOrders> {
           builder: (context, deliveringListSnap) {
             if (deliveringListSnap.hasData) {
               List<String> delivering =
-                  List.from(deliveringListSnap.data!["deliveringOrders"]);
+                  List.from(deliveringListSnap.data!["takingOrders"]);
               return ListView.builder(
                 shrinkWrap: true,
                 itemCount: delivering.length,
@@ -46,11 +46,11 @@ class _DeliveringOrdersState extends State<DeliveringOrders> {
                         if (orderSnap.hasData) {
                           return StreamBuilder(
                             stream: FirebaseFirestore.instance
-                                .collection("Users")
-                                .doc(orderSnap.data!["customerID"])
+                                .collection("Suppliers")
+                                .doc(orderSnap.data!["supplierID"])
                                 .snapshots(),
-                            builder: (context, customerSnap) {
-                              if (customerSnap.hasData) {
+                            builder: (context, supplierSnap) {
+                              if (supplierSnap.hasData) {
                                 return Padding(
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 10),
@@ -59,11 +59,10 @@ class _DeliveringOrdersState extends State<DeliveringOrders> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) =>
-                                              DeliveringDetail(
+                                          builder: (context) => PickingDetail(
                                             orderID: delivering[index],
-                                            customerID:
-                                                customerSnap.data!["id"],
+                                            supplierID:
+                                                supplierSnap.data!["id"],
                                           ),
                                         ),
                                       );
@@ -99,12 +98,12 @@ class _DeliveringOrdersState extends State<DeliveringOrders> {
                                                 "${orderSnap.data!["orderID"]}"),
                                             mText("Ngày đặt:",
                                                 "${orderSnap.data!["orderDay"]}"),
-                                            mText("Khách hàng:",
-                                                "${customerSnap.data!["fullName"]}"),
+                                            mText("Cửa hàng:",
+                                                "${supplierSnap.data!["brand"]}"),
                                             mText("Điện thoại:",
-                                                "${customerSnap.data!["phoneNumber"]}"),
+                                                "${supplierSnap.data!["phoneNumber"]}"),
                                             mText("Địa chỉ:",
-                                                "${customerSnap.data!["address"]}"),
+                                                "${supplierSnap.data!["address"]}"),
                                           ],
                                         ),
                                       ),
