@@ -138,8 +138,8 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
             .collection("Orders")
             .doc(widget.orderID)
             .update({
-          "rePickupDay": reDeliveryDay,
-          "delayPickupReason": delayDeliveryReason,
+          "reDeliveryDay": reDeliveryDay,
+          "delayDeliveryReason": delayDeliveryReason,
           "status": "Delay giao hàng",
           "deliveryHistory": FieldValue.arrayUnion(deliveryHistory),
         });

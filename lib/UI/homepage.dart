@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/UI/orders/picking.dart';
+import 'package:gogoship/UI/orders/redelivery.dart';
+import 'package:gogoship/UI/orders/repickup.dart';
 import 'package:gogoship/UI/shipper_info_screen.dart';
 import 'package:gogoship/shared/mcolors.dart';
 import 'package:intl/intl.dart';
@@ -289,7 +291,7 @@ class _HomePageState extends State<HomePage> {
                                   delivering.length.toString(),
                                   MColors.yelow,
                                   MColors.orange,
-                                  const DeliveringOrders(),
+                                  const ReDeliveryOrders(),
                                 );
                               } else {
                                 return const Text("Error");
@@ -318,7 +320,7 @@ class _HomePageState extends State<HomePage> {
                                   delivering.length.toString(),
                                   MColors.lightOrange,
                                   MColors.lightRed,
-                                  const DeliveringOrders(),
+                                  const RePickupOrders(),
                                 );
                               } else {
                                 return const Text("Error");
