@@ -32,8 +32,8 @@ class _MyMapViewState extends State<MyMapView> {
     getCurrentPosition();
     getDataFromResponse();
     super.initState();
-    debugPrint(destination.toString());
-    debugPrint(HomePage.myLocation.toString());
+    // debugPrint(destination.toString());
+    // debugPrint(HomePage.myLocation.toString());
   }
 
   String url() {
@@ -64,7 +64,7 @@ class _MyMapViewState extends State<MyMapView> {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     HomePage.myLocation = LatLng(position.latitude, position.longitude);
-    print("1");
+    // print("1");
   }
 
   @override

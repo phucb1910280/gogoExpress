@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/order_detail/picking_detail.dart';
 import 'package:gogoship/shared/mcolors.dart';
+import 'package:intl/intl.dart';
 
 class PickingOrders extends StatefulWidget {
   const PickingOrders({super.key});
@@ -12,6 +13,28 @@ class PickingOrders extends StatefulWidget {
 }
 
 class _PickingOrdersState extends State<PickingOrders> {
+  Widget check(bool nguoiNhanTraShip) {
+    return nguoiNhanTraShip == true
+        ? const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                "(Người nhận trả ship)",
+                style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+              ),
+            ],
+          )
+        : const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                "(Người gửi trả ship)",
+                style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+              ),
+            ],
+          );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -21,7 +44,7 @@ class _PickingOrdersState extends State<PickingOrders> {
       ),
       backgroundColor: MColors.background,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+        padding: const EdgeInsets.all(15),
         child: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection("Shippers")
@@ -39,81 +62,84 @@ class _PickingOrdersState extends State<PickingOrders> {
                     width: double.infinity,
                     child: StreamBuilder(
                       stream: FirebaseFirestore.instance
-                          .collection("Orders")
+                          .collection("DeliverOrders")
                           .doc(delivering[index])
                           .snapshots(),
                       builder: (context, orderSnap) {
                         if (orderSnap.hasData) {
-                          return StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Suppliers")
-                                .doc(orderSnap.data!["supplierID"])
-                                .snapshots(),
-                            builder: (context, supplierSnap) {
-                              if (supplierSnap.hasData) {
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PickingDetail(
-                                            orderID: delivering[index],
-                                            supplierID:
-                                                supplierSnap.data!["id"],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.4),
-                                            spreadRadius: 1,
-                                            blurRadius: 5,
-                                            offset: const Offset(0, 5),
-                                          ),
-                                        ],
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          stops: [0.0, 1],
-                                          colors: [
-                                            Colors.white,
-                                            Color.fromARGB(255, 228, 228, 228),
-                                          ],
-                                        ),
+                          return GestureDetector(
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => PickingDetail(
+                                          orderID: orderSnap.data!["id"],
+                                          address:
+                                              orderSnap.data!["dcNguoiGui"],
+                                        ))),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${orderSnap.data!["ngayTaoDon"]}",
+                                  style: const TextStyle(
+                                    fontSize: 19,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.4),
+                                        spreadRadius: 1,
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 5),
                                       ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            mText("Mã đơn hàng:",
-                                                "${orderSnap.data!["orderID"]}"),
-                                            mText("Ngày đặt:",
-                                                "${orderSnap.data!["orderDay"]}"),
-                                            mText("Cửa hàng:",
-                                                "${supplierSnap.data!["brand"]}"),
-                                            mText("Điện thoại:",
-                                                "${supplierSnap.data!["phoneNumber"]}"),
-                                            mText("Địa chỉ:",
-                                                "${supplierSnap.data!["address"]}"),
-                                          ],
-                                        ),
-                                      ),
+                                    ],
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      stops: [0.0, 1],
+                                      colors: [
+                                        Colors.white,
+                                        Color.fromARGB(255, 228, 228, 228),
+                                      ],
                                     ),
                                   ),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      children: [
+                                        mText("Mã đơn:",
+                                            "${orderSnap.data!["id"]}"),
+                                        // mText("Ngày tạo:",
+                                        //     "${orderSnap.data!["ngayTaoDon"]}"),
+                                        mText("Người gửi:",
+                                            "${orderSnap.data!["nguoiGui"]}"),
+                                        mText("Điện thoại:",
+                                            "${orderSnap.data!["sdtNguoiGui"]}"),
+                                        mText("Địa chỉ:",
+                                            "${orderSnap.data!["dcNguoiGui"]}"),
+                                        const SizedBox(
+                                          height: 15,
+                                          child: Divider(
+                                            color: MColors.lightBlue2,
+                                          ),
+                                        ),
+                                        mText("Phí vận chuyển:",
+                                            "${NumberFormat("###,###", "vi-VN").format(orderSnap.data!["phiVanChuyen"])}đ"),
+                                        check(orderSnap
+                                            .data!["nguoiNhanTraShip"]),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         } else {
                           return const Text("");

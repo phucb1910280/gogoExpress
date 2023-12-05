@@ -2,16 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gogoship/UI/homepage.dart';
-import 'package:gogoship/UI/map_view.dart';
 import 'package:gogoship/shared/mcolors.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class RePickupDetail extends StatefulWidget {
   final String orderID;
-  final String supplierID;
-  const RePickupDetail(
-      {super.key, required this.orderID, required this.supplierID});
+  const RePickupDetail({super.key, required this.orderID});
 
   @override
   State<RePickupDetail> createState() => _RePickupDetailState();
@@ -21,14 +17,15 @@ class _RePickupDetailState extends State<RePickupDetail> {
   bool isLoading = true;
   String time = "";
   String today = "";
-  List<String> deliveryHistory = [];
+  List<String> logVanChuyen = [];
+  List<String> logVanChuyenReversed = [];
 
   @override
   void initState() {
     var t = DateTime.now();
     setState(() {
       today = "${t.day}/${t.month}/${t.year}";
-      time = "${t.day}/${t.month}: ";
+      time = "${t.day}/${t.month}:";
     });
     super.initState();
   }
@@ -45,17 +42,20 @@ class _RePickupDetailState extends State<RePickupDetail> {
   Future<void> confirmRePickupOrder() async {
     if (true) {
       onSaving();
-      List changeStatusOrder = [widget.orderID];
-      deliveryHistory.add("$timeĐang lấy hàng");
       try {
+        List changeStatusOrder = [widget.orderID];
+        setState(() {
+          logVanChuyen.add("$time Đang lấy hàng");
+        });
+
         await FirebaseFirestore.instance
-            .collection("Orders")
+            .collection("DeliverOrders")
             .doc(widget.orderID)
             .update({
-          "rePickupDay": "",
-          "delayPickupReason": "",
-          "status": "Đang lấy hàng",
-          "deliveryHistory": FieldValue.arrayUnion(deliveryHistory),
+          "ngayHenLay": "",
+          "lyDoHenLay": "",
+          "trangThaiDonHang": "Đang lấy hàng",
+          "logVanChuyen": FieldValue.arrayUnion(logVanChuyen),
         });
         await FirebaseFirestore.instance
             .collection("Shippers")
@@ -67,15 +67,71 @@ class _RePickupDetailState extends State<RePickupDetail> {
           setState(() {
             isLoading = false;
           });
-          Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const HomePage()),
-              (route) => false);
+          showAlertDialog("Xác nhận thành công");
         });
       } catch (e) {
         debugPrint(e.toString());
       }
     }
+  }
+
+  Future<void> showAlertDialog(String content) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: SingleChildScrollView(
+            child: Center(
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Image.asset(
+                    "assets/icons/success.png",
+                    height: 100,
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Center(
+                    child: Text(
+                      content,
+                      style: const TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomePage()),
+                  (route) => false,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: MColors.darkBlue,
+                foregroundColor: MColors.white,
+                minimumSize: const Size.fromHeight(50),
+              ),
+              child: const Text(
+                "OK",
+                style: TextStyle(
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> onSaving() async {
@@ -115,162 +171,181 @@ class _RePickupDetailState extends State<RePickupDetail> {
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
         child: StreamBuilder(
           stream: FirebaseFirestore.instance
-              .collection("Orders")
+              .collection("DeliverOrders")
               .doc(widget.orderID)
               .snapshots(),
-          builder: (context, orderSnap) {
-            if (orderSnap.hasData) {
-              deliveryHistory = List.from(orderSnap.data!["deliveryHistory"]);
-              return StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection("Suppliers")
-                    .doc(widget.supplierID)
-                    .snapshots(),
-                builder: (context, customer) {
-                  if (customer.hasData) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "THÔNG TIN ĐƠN HÀNG",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+          builder: (context, o) {
+            if (o.hasData) {
+              logVanChuyen = List.from(o.data!["logVanChuyen"]);
+              logVanChuyenReversed = logVanChuyen.reversed.toList();
+              return SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: MColors.yelow,
+                          width: 1,
                         ),
-                        const SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: MColors.yelow,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            mText("Mã đơn:", o.data!["id"]),
+                            mText("Ngày đặt:", o.data!["ngayTaoDon"]),
+                            mText("Trạng thái:", o.data!["trangThaiDonHang"]),
+                            mText("Lý do:", "${o.data!["lyDoHenLay"]}"),
+                            mText("Ngày hẹn lấy:", "${o.data!["ngayHenLay"]}"),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    const Text(
+                      "THÔNG TIN NGƯỜI GỬI",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: MColors.yelow,
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            mText("Người gửi:", o.data!["nguoiGui"]),
+                            mText("Điện thoại:", o.data!["sdtNguoiGui"]),
+                            mText("Địa chỉ:", o.data!["dcNguoiGui"]),
+                            const SizedBox(height: 10),
+                            Row(
                               children: [
-                                mText("Mã đơn:", orderSnap.data!["orderID"]),
-                                mText("Ngày đặt:", orderSnap.data!["orderDay"]),
-                                mText("Trạng thái:", orderSnap.data!["status"]),
-                                mText("Lý do:",
-                                    "${orderSnap.data!["delayPickupReason"]}"),
-                                mText("Ngày hẹn lấy:",
-                                    "${orderSnap.data!["rePickupDay"]}"),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "THÔNG TIN CỬA HÀNG",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: MColors.yelow,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              children: [
-                                mText("Cửa hàng:", customer.data!["brand"]),
-                                mText("Điện thoại:",
-                                    customer.data!["phoneNumber"]),
-                                mText("Địa chỉ:", customer.data!["address"]),
-                                const SizedBox(height: 10),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: ElevatedButton.icon(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) => MyMapView(
-                                                coordinates: LatLng(
-                                                  customer.data!["lat"],
-                                                  customer.data!["long"],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: MColors.blue,
-                                          foregroundColor: MColors.background,
-                                          minimumSize:
-                                              const Size.fromHeight(50),
-                                        ),
-                                        icon: const Icon(
-                                            Icons.roundabout_left_rounded),
-                                        label: const Text(
-                                          "Đường đi",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                          ),
-                                        ),
+                                Expanded(
+                                  flex: 1,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {},
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: MColors.blue,
+                                      foregroundColor: MColors.background,
+                                      minimumSize: const Size.fromHeight(50),
+                                    ),
+                                    icon: const Icon(
+                                        Icons.roundabout_left_rounded),
+                                    label: const Text(
+                                      "Đường đi",
+                                      style: TextStyle(
+                                        fontSize: 18,
                                       ),
                                     ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      flex: 1,
-                                      child: ElevatedButton.icon(
-                                        onPressed: () async => makingPhoneCall(
-                                            customer.data!["phoneNumber"]),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.green[600],
-                                          foregroundColor: MColors.background,
-                                          minimumSize:
-                                              const Size.fromHeight(50),
-                                        ),
-                                        icon: const Icon(Icons.phone),
-                                        label: const Text(
-                                          "Gọi",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                          ),
-                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  flex: 1,
+                                  child: ElevatedButton.icon(
+                                    onPressed: () async =>
+                                        makingPhoneCall(o.data!["sdtNguoiGui"]),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green[600],
+                                      foregroundColor: MColors.background,
+                                      minimumSize: const Size.fromHeight(50),
+                                    ),
+                                    icon: const Icon(Icons.phone),
+                                    label: const Text(
+                                      "Gọi",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    const Text(
+                      "LỊCH SỬ VẬN CHUYỂN",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: MColors.yelow,
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: SizedBox(
+                          height: 150,
+                          child: ListView.builder(
+                            itemCount: logVanChuyen.length,
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.all(4.0),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.circle,
+                                      size: 10,
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Flexible(
+                                      child: Text(
+                                        logVanChuyenReversed[index],
+                                        style: const TextStyle(fontSize: 18),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ),
-                        const Expanded(child: SizedBox(height: 15)),
-                        ElevatedButton(
-                          onPressed: () async => confirmRePickupOrder(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: MColors.yelow,
-                            foregroundColor: MColors.black,
-                            minimumSize: const Size.fromHeight(55),
-                          ),
-                          child: const Text(
-                            "Chuẩn bị lấy hàng",
-                            style: TextStyle(
-                              fontSize: 18,
-                            ),
-                          ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ElevatedButton(
+                      onPressed: () async => await confirmRePickupOrder(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: MColors.yelow,
+                        foregroundColor: MColors.black,
+                        minimumSize: const Size.fromHeight(55),
+                      ),
+                      child: const Text(
+                        "Sẵn sàng lấy hàng",
+                        style: TextStyle(
+                          fontSize: 18,
                         ),
-                        const SizedBox(height: 10),
-                      ],
-                    );
-                  } else {
-                    return const Text("");
-                  }
-                },
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                ),
               );
             } else {
               return const Text("");

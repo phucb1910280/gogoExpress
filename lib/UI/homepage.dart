@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart' as geo;
+import 'package:gogoship/UI/orders/all_delivered.dart';
+import 'package:gogoship/UI/orders/all_pickup.dart';
 import 'package:gogoship/UI/orders/delivering.dart';
 import 'package:gogoship/UI/orders/picking.dart';
 import 'package:gogoship/UI/orders/redelivery.dart';
@@ -232,7 +234,7 @@ class _HomePageState extends State<HomePage> {
                                   const DeliveringOrders(),
                                 );
                               } else {
-                                return const Text("Error");
+                                return const Text("");
                               }
                             },
                           ),
@@ -261,7 +263,7 @@ class _HomePageState extends State<HomePage> {
                                   const PickingOrders(),
                                 );
                               } else {
-                                return const Text("Error");
+                                return const Text("");
                               }
                             },
                           ),
@@ -294,7 +296,7 @@ class _HomePageState extends State<HomePage> {
                                   const ReDeliveryOrders(),
                                 );
                               } else {
-                                return const Text("Error");
+                                return const Text("");
                               }
                             },
                           ),
@@ -323,7 +325,7 @@ class _HomePageState extends State<HomePage> {
                                   const RePickupOrders(),
                                 );
                               } else {
-                                return const Text("Error");
+                                return const Text("");
                               }
                             },
                           ),
@@ -353,10 +355,10 @@ class _HomePageState extends State<HomePage> {
                                   delivering.length.toString(),
                                   MColors.lightGreen,
                                   MColors.green,
-                                  const DeliveringOrders(),
+                                  const AllDelivered(),
                                 );
                               } else {
-                                return const Text("Error");
+                                return const Text("");
                               }
                             },
                           ),
@@ -382,10 +384,10 @@ class _HomePageState extends State<HomePage> {
                                   delivering.length.toString(),
                                   MColors.pink,
                                   MColors.darkPink,
-                                  const DeliveringOrders(),
+                                  const AllPickUp(),
                                 );
                               } else {
-                                return const Text("Error");
+                                return const Text("");
                               }
                             },
                           ),
@@ -394,18 +396,21 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                 ),
+                const SizedBox(
+                  height: 10,
+                ),
               ],
             ),
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => refresh(),
-        child: const Icon(
-          Icons.refresh,
-          color: MColors.darkBlue,
-        ),
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: () => refresh(),
+      //   child: const Icon(
+      //     Icons.refresh,
+      //     color: MColors.darkBlue,
+      //   ),
+      // ),
     );
   }
 

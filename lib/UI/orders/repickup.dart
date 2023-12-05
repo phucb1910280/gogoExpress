@@ -21,7 +21,7 @@ class _RePickupOrdersState extends State<RePickupOrders> {
       ),
       backgroundColor: MColors.background,
       body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+        padding: const EdgeInsets.all(15),
         child: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection("Shippers")
@@ -39,91 +39,82 @@ class _RePickupOrdersState extends State<RePickupOrders> {
                     width: double.infinity,
                     child: StreamBuilder(
                       stream: FirebaseFirestore.instance
-                          .collection("Orders")
+                          .collection("DeliverOrders")
                           .doc(repickup[index])
                           .snapshots(),
-                      builder: (context, orderSnap) {
-                        if (orderSnap.hasData) {
-                          return StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Suppliers")
-                                .doc(orderSnap.data!["supplierID"])
-                                .snapshots(),
-                            builder: (context, supplierSnap) {
-                              if (supplierSnap.hasData) {
-                                return Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 10),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => RePickupDetail(
-                                            orderID: repickup[index],
-                                            supplierID:
-                                                supplierSnap.data!["id"],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(20),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.grey.withOpacity(0.4),
-                                            spreadRadius: 1,
-                                            blurRadius: 5,
-                                            offset: const Offset(0, 5),
-                                          ),
-                                        ],
-                                        gradient: const LinearGradient(
-                                          begin: Alignment.topCenter,
-                                          end: Alignment.bottomCenter,
-                                          stops: [0.0, 1],
-                                          colors: [
-                                            Colors.white,
-                                            Color.fromARGB(255, 228, 228, 228),
-                                          ],
-                                        ),
+                      builder: (context, o) {
+                        if (o.hasData) {
+                          return GestureDetector(
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => RePickupDetail(
+                                        orderID: o.data!["id"]))),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${o.data!["ngayTaoDon"]}",
+                                  style: const TextStyle(
+                                    fontSize: 19,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  height: 10,
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.4),
+                                        spreadRadius: 1,
+                                        blurRadius: 5,
+                                        offset: const Offset(0, 5),
                                       ),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            mText("Mã đơn hàng:",
-                                                "${orderSnap.data!["orderID"]}"),
-                                            mText("Khách hàng:",
-                                                "${supplierSnap.data!["brand"]}"),
-                                            mText("Điện thoại:",
-                                                "${supplierSnap.data!["phoneNumber"]}"),
-                                            mText("Địa chỉ:",
-                                                "${supplierSnap.data!["address"]}"),
-                                            SizedBox(
-                                              height: 20,
-                                              child: Divider(
-                                                color: MColors.darkBlue
-                                                    .withOpacity(.2),
-                                                thickness: 1,
-                                              ),
-                                            ),
-                                            mText("Lý do:",
-                                                "${orderSnap.data!["delayPickupReason"]}"),
-                                            mText("Ngày hẹn:",
-                                                "${orderSnap.data!["rePickupDay"]}"),
-                                          ],
-                                        ),
-                                      ),
+                                    ],
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      stops: [0.0, 1],
+                                      colors: [
+                                        Colors.white,
+                                        Color.fromARGB(255, 228, 228, 228),
+                                      ],
                                     ),
                                   ),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        mText("Mã đơn:", "${o.data!["id"]}"),
+                                        mText("Người gửi:",
+                                            "${o.data!["nguoiGui"]}"),
+                                        mText("Điện thoại:",
+                                            "${o.data!["sdtNguoiGui"]}"),
+                                        mText("Địa chỉ:",
+                                            "${o.data!["dcNguoiGui"]}"),
+                                        SizedBox(
+                                          height: 20,
+                                          child: Divider(
+                                            color: MColors.darkBlue
+                                                .withOpacity(.2),
+                                            thickness: 1,
+                                          ),
+                                        ),
+                                        mText("Lý do:",
+                                            "${o.data!["lyDoHenLay"]}"),
+                                        mText("Ngày hẹn:",
+                                            "${o.data!["ngayHenLay"]}"),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           );
                         } else {
                           return const Text("");

@@ -1,11 +1,8 @@
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:gogoship/UI/login_screen.dart';
+import 'package:gogoship/UI/edit_profile.dart';
+import 'package:gogoship/UI/settings.dart';
 import 'package:gogoship/shared/mcolors.dart';
 
 class ShipperInfoScreen extends StatefulWidget {
@@ -16,52 +13,6 @@ class ShipperInfoScreen extends StatefulWidget {
 }
 
 class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
-  signOut() async {
-    await FirebaseAuth.instance.signOut();
-    if (FirebaseAuth.instance.currentUser == null) {
-      if (context.mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const LoginScreen(),
-          ),
-          (route) => false,
-        );
-      }
-    }
-  }
-
-  //shipperProfileImages
-  UploadTask? uploadTask;
-  PlatformFile? pickedFile;
-  String filePath = "";
-
-  Future updateProfileImg() async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result == null) {
-      return;
-    }
-    setState(() {
-      pickedFile = result.files.first;
-      filePath = pickedFile!.path.toString();
-    });
-    final path =
-        "shipperProfileImages/${FirebaseAuth.instance.currentUser!.email}";
-    final file = File(pickedFile!.path!);
-    final ref = FirebaseStorage.instance.ref().child(path);
-    uploadTask = ref.putFile(file);
-    final snapshot = await uploadTask!.whenComplete(() => null);
-    var userAvtStr = await snapshot.ref.getDownloadURL();
-    await FirebaseFirestore.instance
-        .collection("Shippers")
-        .doc(FirebaseAuth.instance.currentUser!.email)
-        .update(
-      {
-        "profileImg": userAvtStr,
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -138,7 +89,7 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
                             horizontal: 15, vertical: 10),
                         child: Column(
                           children: [
-                            mText("Bưu cục:", snapshot.data["postOffice"]),
+                            // mText("Bưu cục:", snapshot.data["postOffice"]),
                             mText("Ngày tham gia:", snapshot.data["joinDay"]),
                           ],
                         ),
@@ -155,53 +106,52 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            foregroundColor: MColors.white,
-            backgroundColor: MColors.darkBlue,
-            minimumSize: const Size.fromHeight(50),
-          ),
-          onPressed: signOut,
-          child: const Text(
-            "Đăng xuất",
-            style: TextStyle(fontSize: 20),
-          ),
+        child: Row(
+          children: [
+            Expanded(
+              child: SizedBox(
+                child: IconButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const EditProfile())),
+                  style: IconButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      backgroundColor: MColors.lightBlue),
+                  icon: const Icon(Icons.edit),
+                ),
+              ),
+            ),
+            const SizedBox(
+              width: 10,
+            ),
+            Expanded(
+              child: SizedBox(
+                child: IconButton(
+                  onPressed: () => Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => const SettingScreen())),
+                  style: IconButton.styleFrom(
+                      minimumSize: const Size.fromHeight(50),
+                      backgroundColor: MColors.lightBlue),
+                  icon: const Icon(Icons.settings),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget userAvt(String imgUrl) {
-    return Stack(
-      children: [
-        Container(
-          height: 200,
-          width: 200,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            image: DecorationImage(
-              fit: BoxFit.cover,
-              image: NetworkImage(imgUrl),
-            ),
-          ),
+    return Container(
+      height: 200,
+      width: 200,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        image: DecorationImage(
+          fit: BoxFit.cover,
+          image: NetworkImage(imgUrl),
         ),
-        Positioned(
-          bottom: 0,
-          right: 0,
-          child: GestureDetector(
-            onTap: updateProfileImg,
-            child: Container(
-              decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(60),
-                  color: MColors.lightBlue.withOpacity(.5)),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(Icons.edit),
-              ),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -236,9 +186,6 @@ class _ShipperInfoScreenState extends State<ShipperInfoScreen> {
             ],
           ),
         ),
-        // const SizedBox(
-        //   height: 15,
-        // ),
       ],
     );
   }
