@@ -92,14 +92,11 @@ class _AllDeliveredState extends State<AllDelivered> {
                                 mText("Người nhận:", "${o.data!["nguoiNhan"]}"),
                                 mText("Điện thoại:",
                                     "${o.data!["sdtNguoiNhan"]}"),
-                                o.data!["nguoiNhanTraShip"] == false
-                                    ? mText(
-                                        "Tiền CoD:",
-                                        NumberFormat.simpleCurrency(
-                                                locale: 'vi-VN',
-                                                decimalDigits: 0)
-                                            .format(o.data!["tienThuHo"]))
-                                    : const SizedBox(),
+                                mText(
+                                    "Tiền CoD:",
+                                    NumberFormat.simpleCurrency(
+                                            locale: 'vi-VN', decimalDigits: 0)
+                                        .format(o.data!["tienThuHo"])),
                               ],
                             ),
                           ),

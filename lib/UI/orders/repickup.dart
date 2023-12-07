@@ -20,8 +20,7 @@ class _RePickupOrdersState extends State<RePickupOrders> {
         backgroundColor: MColors.lightOrange,
       ),
       backgroundColor: MColors.background,
-      body: Padding(
-        padding: const EdgeInsets.all(15),
+      body: SizedBox(
         child: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection("Shippers")
@@ -44,76 +43,79 @@ class _RePickupOrdersState extends State<RePickupOrders> {
                           .snapshots(),
                       builder: (context, o) {
                         if (o.hasData) {
-                          return GestureDetector(
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => RePickupDetail(
-                                        orderID: o.data!["id"]))),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${o.data!["ngayTaoDon"]}",
-                                  style: const TextStyle(
-                                    fontSize: 19,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.4),
-                                        spreadRadius: 1,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      stops: [0.0, 1],
-                                      colors: [
-                                        Colors.white,
-                                        Color.fromARGB(255, 228, 228, 228),
-                                      ],
+                          return Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: GestureDetector(
+                              onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => RePickupDetail(
+                                          orderID: o.data!["id"]))),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${o.data!["ngayTaoDon"]}",
+                                    style: const TextStyle(
+                                      fontSize: 19,
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        mText("Mã đơn:", "${o.data!["id"]}"),
-                                        mText("Người gửi:",
-                                            "${o.data!["nguoiGui"]}"),
-                                        mText("Điện thoại:",
-                                            "${o.data!["sdtNguoiGui"]}"),
-                                        mText("Địa chỉ:",
-                                            "${o.data!["dcNguoiGui"]}"),
-                                        SizedBox(
-                                          height: 20,
-                                          child: Divider(
-                                            color: MColors.darkBlue
-                                                .withOpacity(.2),
-                                            thickness: 1,
-                                          ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.4),
+                                          spreadRadius: 1,
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 5),
                                         ),
-                                        mText("Lý do:",
-                                            "${o.data!["lyDoHenLay"]}"),
-                                        mText("Ngày hẹn:",
-                                            "${o.data!["ngayHenLay"]}"),
                                       ],
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        stops: [0.0, 1],
+                                        colors: [
+                                          Colors.white,
+                                          Color.fromARGB(255, 228, 228, 228),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(12.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          mText("Mã đơn:", "${o.data!["id"]}"),
+                                          mText("Người gửi:",
+                                              "${o.data!["nguoiGui"]}"),
+                                          mText("Điện thoại:",
+                                              "${o.data!["sdtNguoiGui"]}"),
+                                          mText("Địa chỉ:",
+                                              "${o.data!["dcNguoiGui"]}"),
+                                          SizedBox(
+                                            height: 20,
+                                            child: Divider(
+                                              color: MColors.darkBlue
+                                                  .withOpacity(.2),
+                                              thickness: 1,
+                                            ),
+                                          ),
+                                          mText("Lý do:",
+                                              "${o.data!["lyDoHenLay"]}"),
+                                          mText("Ngày hẹn:",
+                                              "${o.data!["ngayHenLay"]}"),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         } else {

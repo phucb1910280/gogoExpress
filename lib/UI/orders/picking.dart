@@ -43,8 +43,7 @@ class _PickingOrdersState extends State<PickingOrders> {
         backgroundColor: MColors.lightPink,
       ),
       backgroundColor: MColors.background,
-      body: Padding(
-        padding: const EdgeInsets.all(15),
+      body: SizedBox(
         child: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection("Shippers")
@@ -67,78 +66,84 @@ class _PickingOrdersState extends State<PickingOrders> {
                           .snapshots(),
                       builder: (context, orderSnap) {
                         if (orderSnap.hasData) {
-                          return GestureDetector(
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => PickingDetail(
-                                          orderID: orderSnap.data!["id"],
-                                          address:
-                                              orderSnap.data!["dcNguoiGui"],
-                                        ))),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${orderSnap.data!["ngayTaoDon"]}",
-                                  style: const TextStyle(
-                                    fontSize: 19,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.4),
-                                        spreadRadius: 1,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      stops: [0.0, 1],
-                                      colors: [
-                                        Colors.white,
-                                        Color.fromARGB(255, 228, 228, 228),
-                                      ],
+                          return Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: GestureDetector(
+                              onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => PickingDetail(
+                                            orderID: orderSnap.data!["id"],
+                                            address:
+                                                orderSnap.data!["dcNguoiGui"],
+                                          ))),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${orderSnap.data!["ngayTaoDon"]}",
+                                    style: const TextStyle(
+                                      fontSize: 19,
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      children: [
-                                        mText("Mã đơn:",
-                                            "${orderSnap.data!["id"]}"),
-                                        // mText("Ngày tạo:",
-                                        //     "${orderSnap.data!["ngayTaoDon"]}"),
-                                        mText("Người gửi:",
-                                            "${orderSnap.data!["nguoiGui"]}"),
-                                        mText("Điện thoại:",
-                                            "${orderSnap.data!["sdtNguoiGui"]}"),
-                                        mText("Địa chỉ:",
-                                            "${orderSnap.data!["dcNguoiGui"]}"),
-                                        const SizedBox(
-                                          height: 15,
-                                          child: Divider(
-                                            color: MColors.lightBlue2,
-                                          ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.4),
+                                          spreadRadius: 1,
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 5),
                                         ),
-                                        mText("Phí vận chuyển:",
-                                            "${NumberFormat("###,###", "vi-VN").format(orderSnap.data!["phiVanChuyen"])}đ"),
-                                        check(orderSnap
-                                            .data!["nguoiNhanTraShip"]),
                                       ],
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        stops: [0.0, 1],
+                                        colors: [
+                                          Colors.white,
+                                          Color.fromARGB(255, 228, 228, 228),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        children: [
+                                          mText("Mã đơn:",
+                                              "${orderSnap.data!["id"]}"),
+                                          // mText("Ngày tạo:",
+                                          //     "${orderSnap.data!["ngayTaoDon"]}"),
+                                          mText("Người gửi:",
+                                              "${orderSnap.data!["nguoiGui"]}"),
+                                          mText("Điện thoại:",
+                                              "${orderSnap.data!["sdtNguoiGui"]}"),
+                                          mText("Địa chỉ:",
+                                              "${orderSnap.data!["dcNguoiGui"]}"),
+                                          const SizedBox(
+                                            height: 15,
+                                            child: Divider(
+                                              color: MColors.lightBlue2,
+                                            ),
+                                          ),
+                                          orderSnap.data!["nguoiNhanTraShip"] ==
+                                                  false
+                                              ? mText("Thu người gửi:",
+                                                  "${NumberFormat("###,###", "vi-VN").format(orderSnap.data!["phiVanChuyen"])}đ")
+                                              : const SizedBox(),
+                                          check(orderSnap
+                                              .data!["nguoiNhanTraShip"]),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         } else {

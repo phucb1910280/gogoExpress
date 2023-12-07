@@ -16,8 +16,12 @@ import 'package:url_launcher/url_launcher.dart';
 class DeliveringDetail extends StatefulWidget {
   final String orderID;
   final String address;
+  final String postOffice;
   const DeliveringDetail(
-      {super.key, required this.orderID, required this.address});
+      {super.key,
+      required this.orderID,
+      required this.address,
+      required this.postOffice});
 
   @override
   State<DeliveringDetail> createState() => _DeliveringDetailState();
@@ -37,13 +41,18 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
   String today = "";
   String time = "";
 
+  double currentTotal = 0;
+
   List<String> logVanChuyen = [];
   List<Location> receiverCoordinates = [];
   var latLong = const LatLng(0, 0);
 
+  List<String> postOrdersList = [];
+
   @override
   void initState() {
     getCoordinates();
+    getCurrentData();
     path = "anhGiaoHang/${widget.orderID}";
     var t = DateTime.now();
     String tommorrow = "${t.day + 1}/${t.month}/${t.year}";
@@ -53,6 +62,23 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
       today = "${t.hour}:${t.minute}, ${t.day}/${t.month}/${t.year}";
     });
     super.initState();
+  }
+
+  getCurrentData() async {
+    var t = await FirebaseFirestore.instance
+        .collection("PostOffice")
+        .doc(widget.postOffice)
+        .get();
+    var l = List<String>.from(t["donHang"]);
+    var s = await FirebaseFirestore.instance
+        .collection("Shippers")
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .get();
+    double r = double.parse(s["totalReceivedToday"].toString());
+    setState(() {
+      postOrdersList = l;
+      currentTotal = r;
+    });
   }
 
   getCoordinates() async {
@@ -120,14 +146,19 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
     });
   }
 
-  Future<void> confirmSuccessfulDeliveryOrder(double total) async {
+  double total(double a, double b) {
+    return a + b;
+  }
+
+  Future<void> confirmSuccessfulDeliveryOrder(double cod) async {
     if (tookImg) {
       onSaving();
       final ref = FirebaseStorage.instance.ref().child(path);
       await ref.putFile(File(file!.path));
       String imgUrl = await ref.getDownloadURL();
       List changeStatusOrder = [widget.orderID];
-      logVanChuyen.add("$timeĐã giao hàng");
+      logVanChuyen.add("$time Đã giao hàng");
+      postOrdersList.add(widget.orderID);
       try {
         await FirebaseFirestore.instance
             .collection("DeliverOrders")
@@ -141,12 +172,18 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
           "logVanChuyen": FieldValue.arrayUnion(logVanChuyen),
         });
         await FirebaseFirestore.instance
+            .collection("PostOffice")
+            .doc(widget.postOffice)
+            .update({
+          "donHang": FieldValue.arrayUnion(postOrdersList),
+        });
+        await FirebaseFirestore.instance
             .collection("Shippers")
             .doc(FirebaseAuth.instance.currentUser!.email)
             .update({
           "deliveringOrders": FieldValue.arrayRemove(changeStatusOrder),
           "successfulDeliveryOrders": FieldValue.arrayUnion(changeStatusOrder),
-          "totalReceivedToday": HomePage.totalReceivedToday + total,
+          "totalReceivedToday": cod,
         }).then((value) {
           setState(() {
             isLoading = false;
@@ -338,6 +375,7 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
                         padding: const EdgeInsets.all(8.0),
                         child: Column(
                           children: [
+                            mText("Tên sản phẩm:", o.data!["tenSanPham"]),
                             mText(
                                 "Giá trị hàng hóa:",
                                 NumberFormat.simpleCurrency(
@@ -450,7 +488,7 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
                                   const Row(
                                     children: [
                                       Text(
-                                        "Ảnh lấy hàng",
+                                        "Ảnh giao hàng",
                                         style: TextStyle(
                                           fontSize: 20,
                                           color: MColors.darkBlue,
@@ -472,8 +510,9 @@ class _DeliveringDetailState extends State<DeliveringDetail> {
                     SizedBox(height: tookImg ? 15 : 0),
                     ElevatedButton(
                       onPressed: () async => tookImg
-                          ? await confirmSuccessfulDeliveryOrder(
-                              o.data!["tienThuHo"])
+                          ? await confirmSuccessfulDeliveryOrder(total(
+                              currentTotal,
+                              double.parse(o.data!["tienThuHo"].toString())))
                           : await takePhoto(),
                       style: ElevatedButton.styleFrom(
                         foregroundColor: MColors.background,

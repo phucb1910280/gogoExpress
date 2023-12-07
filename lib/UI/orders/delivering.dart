@@ -43,8 +43,7 @@ class _DeliveringOrdersState extends State<DeliveringOrders> {
         backgroundColor: MColors.lightBlue,
       ),
       backgroundColor: MColors.background,
-      body: Padding(
-        padding: const EdgeInsets.all(15),
+      body: SizedBox(
         child: StreamBuilder(
           stream: FirebaseFirestore.instance
               .collection("Shippers")
@@ -67,82 +66,87 @@ class _DeliveringOrdersState extends State<DeliveringOrders> {
                           .snapshots(),
                       builder: (context, o) {
                         if (o.hasData) {
-                          return GestureDetector(
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => DeliveringDetail(
-                                          orderID: o.data!["id"],
-                                          address: o.data!["dcNguoiNhan"],
-                                        ))),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "${o.data!["ngayTaoDon"]}",
-                                  style: const TextStyle(
-                                    fontSize: 19,
-                                    fontStyle: FontStyle.italic,
-                                  ),
-                                ),
-                                const SizedBox(
-                                  height: 10,
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.4),
-                                        spreadRadius: 1,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 5),
-                                      ),
-                                    ],
-                                    gradient: const LinearGradient(
-                                      begin: Alignment.topCenter,
-                                      end: Alignment.bottomCenter,
-                                      stops: [0.0, 1],
-                                      colors: [
-                                        Colors.white,
-                                        Color.fromARGB(255, 228, 228, 228),
-                                      ],
+                          return Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: GestureDetector(
+                              onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => DeliveringDetail(
+                                            orderID: o.data!["id"],
+                                            address: o.data!["dcNguoiNhan"],
+                                            postOffice: deliveringListSnap
+                                                .data!["postOffice"],
+                                          ))),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "${o.data!["ngayTaoDon"]}",
+                                    style: const TextStyle(
+                                      fontSize: 19,
+                                      fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        mText(
-                                            "Mã đơn hàng:", "${o.data!["id"]}"),
-                                        // mText("Ngày tạo:",
-                                        //     "${o.data!["ngayTaoDon"]}"),
-                                        mText("Người nhận:",
-                                            "${o.data!["nguoiNhan"]}"),
-                                        mText("Điện thoại:",
-                                            "${o.data!["sdtNguoiNhan"]}"),
-                                        mText("Địa chỉ:",
-                                            "${o.data!["dcNguoiNhan"]}"),
-                                        const SizedBox(
-                                          height: 15,
-                                          child: Divider(
-                                            color: MColors.lightBlue2,
-                                          ),
+                                  const SizedBox(
+                                    height: 10,
+                                  ),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.4),
+                                          spreadRadius: 1,
+                                          blurRadius: 5,
+                                          offset: const Offset(0, 5),
                                         ),
-                                        mText("Giá trị hàng hóa:",
-                                            "${NumberFormat("###,###", "vi-VN").format(o.data!["giaTriHangHoa"])}đ"),
-                                        mText("Phí vận chuyển:",
-                                            "${NumberFormat("###,###", "vi-VN").format(o.data!["phiVanChuyen"])}đ"),
-                                        check(o.data!["nguoiNhanTraShip"]),
-                                        mText("Tiền CoD:",
-                                            "${NumberFormat("###,###", "vi-VN").format(o.data!["tienThuHo"])}đ"),
                                       ],
+                                      gradient: const LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        stops: [0.0, 1],
+                                        colors: [
+                                          Colors.white,
+                                          Color.fromARGB(255, 228, 228, 228),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          mText("Mã đơn hàng:",
+                                              "${o.data!["id"]}"),
+                                          // mText("Ngày tạo:",
+                                          //     "${o.data!["ngayTaoDon"]}"),
+                                          mText("Người nhận:",
+                                              "${o.data!["nguoiNhan"]}"),
+                                          mText("Điện thoại:",
+                                              "${o.data!["sdtNguoiNhan"]}"),
+                                          mText("Địa chỉ:",
+                                              "${o.data!["dcNguoiNhan"]}"),
+                                          const SizedBox(
+                                            height: 15,
+                                            child: Divider(
+                                              color: MColors.lightBlue2,
+                                            ),
+                                          ),
+                                          mText("Giá trị hàng hóa:",
+                                              "${NumberFormat("###,###", "vi-VN").format(o.data!["giaTriHangHoa"])}đ"),
+                                          mText("Phí vận chuyển:",
+                                              "${NumberFormat("###,###", "vi-VN").format(o.data!["phiVanChuyen"])}đ"),
+                                          check(o.data!["nguoiNhanTraShip"]),
+                                          mText("Tiền CoD:",
+                                              "${NumberFormat("###,###", "vi-VN").format(o.data!["tienThuHo"])}đ"),
+                                        ],
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         } else {

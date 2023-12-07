@@ -16,7 +16,6 @@ import 'package:location/location.dart';
 
 class HomePage extends StatefulWidget {
   static var myLocation = const LatLng(0, 0);
-  static double totalReceivedToday = 0;
   const HomePage({super.key});
 
   @override
@@ -24,11 +23,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<String> deliveringOrders = <String>[];
+  List<String> ordersList = <String>[];
 
   String today = "";
-  int allGotLength = 0;
-  int allDeliveredLength = 0;
   double total = 0;
 
   @override
@@ -47,7 +44,6 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       today = "${day.day}-${day.month}-${day.year}";
     });
-    await getTodayOrderData();
   }
 
   checkPermission() async {
@@ -62,15 +58,6 @@ class _HomePageState extends State<HomePage> {
     geo.Position position = await geo.Geolocator.getCurrentPosition(
         desiredAccuracy: geo.LocationAccuracy.high);
     HomePage.myLocation = LatLng(position.latitude, position.longitude);
-  }
-
-  getTodayOrderData() async {
-    var todayData = await FirebaseFirestore.instance
-        .collection("Shippers")
-        .doc(FirebaseAuth.instance.currentUser!.email)
-        .get();
-    HomePage.totalReceivedToday =
-        double.parse(todayData["totalReceivedToday"].toString());
   }
 
   @override
@@ -92,52 +79,329 @@ class _HomePageState extends State<HomePage> {
                         .snapshots(),
                     builder: (BuildContext context, AsyncSnapshot snapshot) {
                       if (snapshot.hasData) {
-                        return GestureDetector(
-                          onTap: () => Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ShipperInfoScreen(),
-                            ),
-                          ),
-                          child: Container(
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                stops: [0.0, 1],
-                                colors: [
-                                  Color.fromARGB(255, 230, 230, 230),
-                                  Colors.white,
-                                ],
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.3),
-                                  spreadRadius: 2,
-                                  blurRadius: 3,
-                                  offset: const Offset(0, 3),
+                        return SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ShipperInfoScreen(),
+                                  ),
                                 ),
-                              ],
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: ListTile(
-                              isThreeLine: true,
-                              leading: shipperAvt(snapshot.data["profileImg"]),
-                              title: Text(
-                                snapshot.data["fullName"],
-                                style: const TextStyle(
-                                    fontSize: 25, color: MColors.darkBlue),
-                              ),
-                              subtitle: const Text(
-                                "Xem chi tiết",
-                                style: TextStyle(
-                                  fontStyle: FontStyle.italic,
-                                  fontSize: 15,
-                                  color: MColors.darkBlue,
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      stops: [0.0, 1],
+                                      colors: [
+                                        Color.fromARGB(255, 230, 230, 230),
+                                        Colors.white,
+                                      ],
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.3),
+                                        spreadRadius: 2,
+                                        blurRadius: 3,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: ListTile(
+                                    isThreeLine: true,
+                                    leading:
+                                        shipperAvt(snapshot.data["profileImg"]),
+                                    title: Text(
+                                      snapshot.data["fullName"],
+                                      style: const TextStyle(
+                                          fontSize: 25,
+                                          color: MColors.darkBlue),
+                                    ),
+                                    subtitle: const Text(
+                                      "Xem chi tiết",
+                                      style: TextStyle(
+                                        fontStyle: FontStyle.italic,
+                                        fontSize: 15,
+                                        color: MColors.darkBlue,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
+                              const SizedBox(height: 15),
+                              Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Text(
+                                  "Hôm nay, $today",
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: MColors.darkBlue,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: MColors.darkBlue,
+                                    width: 2,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(13),
+                                  child: Column(
+                                    children: [
+                                      const Row(
+                                        children: [
+                                          Text(
+                                            "Số tiền đã thu trong ngày:",
+                                            style: TextStyle(
+                                              fontSize: 20,
+                                              color: MColors.darkBlue,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            NumberFormat.simpleCurrency(
+                                                    locale: 'vi-VN',
+                                                    decimalDigits: 0)
+                                                .format(snapshot.data[
+                                                    "totalReceivedToday"]),
+                                            style: const TextStyle(
+                                              fontSize: 25,
+                                              color: MColors.darkBlue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const Expanded(child: SizedBox()),
+                                          IconButton(
+                                            onPressed: () {},
+                                            icon: const Icon(
+                                              Icons.payments_rounded,
+                                              color: MColors.darkBlue,
+                                              size: 35,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 15),
+                              SizedBox(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 1,
+                                      child: SizedBox(
+                                        child: StreamBuilder(
+                                          stream: FirebaseFirestore.instance
+                                              .collection("Shippers")
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser!.email)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              List<String> delivering =
+                                                  List.from(snapshot.data![
+                                                      "deliveringOrders"]);
+                                              return orderGridItems(
+                                                "Đang\ngiao hàng",
+                                                delivering.length.toString(),
+                                                MColors.pink,
+                                                MColors.darkBlue3,
+                                                const DeliveringOrders(),
+                                              );
+                                            } else {
+                                              return const Text("");
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: SizedBox(
+                                        child: StreamBuilder(
+                                          stream: FirebaseFirestore.instance
+                                              .collection("Shippers")
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser!.email)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              List<String> delivering =
+                                                  List.from(snapshot
+                                                      .data!["takingOrders"]);
+                                              return orderGridItems(
+                                                "Đang\nlấy hàng",
+                                                delivering.length.toString(),
+                                                MColors.lightPink,
+                                                MColors.darkBlue2,
+                                                const PickingOrders(),
+                                              );
+                                            } else {
+                                              return const Text("");
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 1,
+                                      child: SizedBox(
+                                        child: StreamBuilder(
+                                          stream: FirebaseFirestore.instance
+                                              .collection("Shippers")
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser!.email)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              List<String> delivering =
+                                                  List.from(snapshot.data![
+                                                      "redeliveryOrders"]);
+                                              return orderGridItems(
+                                                "Delay\ngiao hàng",
+                                                delivering.length.toString(),
+                                                MColors.yelow,
+                                                MColors.orange,
+                                                const ReDeliveryOrders(),
+                                              );
+                                            } else {
+                                              return const Text("");
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: SizedBox(
+                                        child: StreamBuilder(
+                                          stream: FirebaseFirestore.instance
+                                              .collection("Shippers")
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser!.email)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              List<String> delivering =
+                                                  List.from(snapshot
+                                                      .data!["reTakingOrders"]);
+                                              return orderGridItems(
+                                                "Delay\nlấy hàng",
+                                                delivering.length.toString(),
+                                                MColors.lightOrange,
+                                                MColors.lightRed,
+                                                const RePickupOrders(),
+                                              );
+                                            } else {
+                                              return const Text("");
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              SizedBox(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 1,
+                                      child: SizedBox(
+                                        child: StreamBuilder(
+                                          stream: FirebaseFirestore.instance
+                                              .collection("Shippers")
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser!.email)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              List<String> delivering =
+                                                  List.from(snapshot.data![
+                                                      "successfulDeliveryOrders"]);
+                                              return orderGridItems(
+                                                "Đã\ngiao hàng",
+                                                delivering.length.toString(),
+                                                MColors.lightGreen,
+                                                MColors.green,
+                                                const AllDelivered(),
+                                              );
+                                            } else {
+                                              return const Text("");
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: SizedBox(
+                                        child: StreamBuilder(
+                                          stream: FirebaseFirestore.instance
+                                              .collection("Shippers")
+                                              .doc(FirebaseAuth
+                                                  .instance.currentUser!.email)
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.hasData) {
+                                              List<String> delivering =
+                                                  List.from(snapshot
+                                                      .data!["importOrders"]);
+                                              return orderGridItems(
+                                                "Đã\nlấy hàng",
+                                                delivering.length.toString(),
+                                                MColors.pink,
+                                                MColors.darkPink,
+                                                const AllPickUp(),
+                                              );
+                                            } else {
+                                              return const Text("");
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                            ],
                           ),
                         );
                       } else {
@@ -145,259 +409,6 @@ class _HomePageState extends State<HomePage> {
                       }
                     },
                   ),
-                ),
-                const SizedBox(height: 15),
-                Padding(
-                  padding: const EdgeInsets.all(10.0),
-                  child: Text(
-                    "Hôm nay, $today",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: MColors.darkBlue,
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: MColors.darkBlue,
-                      width: 2,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(13),
-                    child: Column(
-                      children: [
-                        const Row(
-                          children: [
-                            Text(
-                              "Số tiền đã thu trong ngày:",
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: MColors.darkBlue,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        Row(
-                          children: [
-                            Text(
-                              NumberFormat.simpleCurrency(
-                                      locale: 'vi-VN', decimalDigits: 0)
-                                  .format(HomePage.totalReceivedToday),
-                              style: const TextStyle(
-                                fontSize: 25,
-                                color: MColors.darkBlue,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Expanded(child: SizedBox()),
-                            IconButton(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.payments_rounded,
-                                color: MColors.darkBlue,
-                                size: 35,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                SizedBox(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          child: StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Shippers")
-                                .doc(FirebaseAuth.instance.currentUser!.email)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                List<String> delivering = List.from(
-                                    snapshot.data!["deliveringOrders"]);
-                                return orderGridItems(
-                                  "Đang\ngiao hàng",
-                                  delivering.length.toString(),
-                                  MColors.pink,
-                                  MColors.darkBlue3,
-                                  const DeliveringOrders(),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          child: StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Shippers")
-                                .doc(FirebaseAuth.instance.currentUser!.email)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                List<String> delivering =
-                                    List.from(snapshot.data!["takingOrders"]);
-                                return orderGridItems(
-                                  "Đang\nlấy hàng",
-                                  delivering.length.toString(),
-                                  MColors.lightPink,
-                                  MColors.darkBlue2,
-                                  const PickingOrders(),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          child: StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Shippers")
-                                .doc(FirebaseAuth.instance.currentUser!.email)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                List<String> delivering = List.from(
-                                    snapshot.data!["redeliveryOrders"]);
-                                return orderGridItems(
-                                  "Delay\ngiao hàng",
-                                  delivering.length.toString(),
-                                  MColors.yelow,
-                                  MColors.orange,
-                                  const ReDeliveryOrders(),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          child: StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Shippers")
-                                .doc(FirebaseAuth.instance.currentUser!.email)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                List<String> delivering =
-                                    List.from(snapshot.data!["reTakingOrders"]);
-                                return orderGridItems(
-                                  "Delay\nlấy hàng",
-                                  delivering.length.toString(),
-                                  MColors.lightOrange,
-                                  MColors.lightRed,
-                                  const RePickupOrders(),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          child: StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Shippers")
-                                .doc(FirebaseAuth.instance.currentUser!.email)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                List<String> delivering = List.from(
-                                    snapshot.data!["successfulDeliveryOrders"]);
-                                return orderGridItems(
-                                  "Đã\ngiao hàng",
-                                  delivering.length.toString(),
-                                  MColors.lightGreen,
-                                  MColors.green,
-                                  const AllDelivered(),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 10,
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: SizedBox(
-                          child: StreamBuilder(
-                            stream: FirebaseFirestore.instance
-                                .collection("Shippers")
-                                .doc(FirebaseAuth.instance.currentUser!.email)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData) {
-                                List<String> delivering =
-                                    List.from(snapshot.data!["importOrders"]);
-                                return orderGridItems(
-                                  "Đã\nlấy hàng",
-                                  delivering.length.toString(),
-                                  MColors.pink,
-                                  MColors.darkPink,
-                                  const AllPickUp(),
-                                );
-                              } else {
-                                return const Text("");
-                              }
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(
-                  height: 10,
                 ),
               ],
             ),

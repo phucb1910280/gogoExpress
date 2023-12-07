@@ -224,70 +224,72 @@ class _SettingScreenState extends State<SettingScreen> {
           title: const Text("Cài đặt"),
         ),
         body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() {
-                        hideChangePW = !hideChangePW;
-                        resetControllers();
-                      }),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: MColors.white,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 15, vertical: 20),
-                          child: Text(
-                            "Đổi mật khẩu",
-                            style: TextStyle(
-                                fontSize: 18, color: MColors.darkBlue),
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () => setState(() {
+                          hideChangePW = !hideChangePW;
+                          resetControllers();
+                        }),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: MColors.white,
+                              borderRadius: BorderRadius.circular(20)),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 20),
+                            child: Text(
+                              "Đổi mật khẩu",
+                              style: TextStyle(
+                                  fontSize: 18, color: MColors.darkBlue),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: hideChangePW == true ? 0 : 10,
-              ),
-              hideChangePW == false ? changePW() : const SizedBox(),
-              const SizedBox(
-                height: 10,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async => await showCautionDialog(
-                          "Bạn muốn đăng xuất?", "Hủy", true),
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: MColors.white,
-                            borderRadius: BorderRadius.circular(20)),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(
-                              horizontal: 15, vertical: 20),
-                          child: Text(
-                            "Đăng xuất",
-                            style: TextStyle(
-                                fontSize: 18, color: MColors.darkBlue),
+                  ],
+                ),
+                SizedBox(
+                  height: hideChangePW == true ? 0 : 10,
+                ),
+                hideChangePW == false ? changePW() : const SizedBox(),
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () async => await showCautionDialog(
+                            "Bạn muốn đăng xuất?", "Hủy", true),
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: MColors.white,
+                              borderRadius: BorderRadius.circular(20)),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 20),
+                            child: Text(
+                              "Đăng xuất",
+                              style: TextStyle(
+                                  fontSize: 18, color: MColors.darkBlue),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -331,7 +333,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       });
                     },
                     child: Icon(
-                      hideCNPW ? Icons.visibility : Icons.visibility_off,
+                      hideCPW ? Icons.visibility : Icons.visibility_off,
                       color: MColors.lightBlue,
                     ),
                   ),
@@ -389,7 +391,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       });
                     },
                     child: Icon(
-                      hideCNPW ? Icons.visibility : Icons.visibility_off,
+                      hideNPW ? Icons.visibility : Icons.visibility_off,
                       color: MColors.lightBlue,
                     ),
                   ),

@@ -36,6 +36,8 @@ class _PickingDetailState extends State<PickingDetail> {
   String ngayHenLay = "";
   String time = "";
 
+  double currentTotal = 0;
+
   List<String> logVanChuyen = [];
   List<Location> senderCoordinates = [];
   var latLong = const LatLng(0, 0);
@@ -43,6 +45,7 @@ class _PickingDetailState extends State<PickingDetail> {
   @override
   void initState() {
     getCoordinates();
+    getCurrentTotal();
     path = "anhLayHang/${widget.orderID}";
     var t = DateTime.now();
     String tommorrow = "${t.day + 1}/${t.month}/${t.year}";
@@ -51,6 +54,39 @@ class _PickingDetailState extends State<PickingDetail> {
       time = "${t.day}/${t.month}:";
     });
     super.initState();
+  }
+
+  getCurrentTotal() async {
+    var s = await FirebaseFirestore.instance
+        .collection("Shippers")
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .get();
+    double r = double.parse(s["totalReceivedToday"].toString());
+    setState(() {
+      currentTotal = r;
+    });
+  }
+
+  Widget check(bool nguoiNhanTraShip) {
+    return nguoiNhanTraShip == true
+        ? const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                "(Người nhận trả ship)",
+                style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+              ),
+            ],
+          )
+        : const Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                "(Người gửi trả ship)",
+                style: TextStyle(fontSize: 18, fontStyle: FontStyle.italic),
+              ),
+            ],
+          );
   }
 
   getCoordinates() async {
@@ -96,6 +132,10 @@ class _PickingDetailState extends State<PickingDetail> {
     });
   }
 
+  double total(double a, double b) {
+    return a + b;
+  }
+
   Future<void> confirmPickup(double phiShip) async {
     if (tookImg) {
       onSaving();
@@ -123,7 +163,7 @@ class _PickingDetailState extends State<PickingDetail> {
             .update({
           "takingOrders": FieldValue.arrayRemove(changeStatusOrder),
           "importOrders": FieldValue.arrayUnion(changeStatusOrder),
-          "totalReceivedToday": HomePage.totalReceivedToday + phiShip,
+          "totalReceivedToday": phiShip,
         }).then((value) {
           setState(() {
             isLoading = false;
@@ -293,6 +333,8 @@ class _PickingDetailState extends State<PickingDetail> {
                             mText("Ngày đặt:", orderSnap.data!["ngayTaoDon"]),
                             mText("Trạng thái:",
                                 orderSnap.data!["trangThaiDonHang"]),
+                            mText(
+                                "Tên sản phẩm:", orderSnap.data!["tenSanPham"]),
                           ],
                         ),
                       ),
@@ -374,6 +416,41 @@ class _PickingDetailState extends State<PickingDetail> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10),
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: MColors.darkBlue,
+                          width: 1,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            mText(
+                                "Tên sản phẩm:", orderSnap.data!["tenSanPham"]),
+                            mText(
+                                "Giá trị hàng hóa:",
+                                NumberFormat.simpleCurrency(
+                                        locale: 'vi-VN', decimalDigits: 0)
+                                    .format(orderSnap.data!["giaTriHangHoa"])),
+                            mText(
+                                "Phí vận chuyển:",
+                                NumberFormat.simpleCurrency(
+                                        locale: 'vi-VN', decimalDigits: 0)
+                                    .format(orderSnap.data!["phiVanChuyen"])),
+                            check(orderSnap.data!["nguoiNhanTraShip"]),
+                            mText(
+                                "Thu người gửi:",
+                                NumberFormat.simpleCurrency(
+                                        locale: 'vi-VN', decimalDigits: 0)
+                                    .format(orderSnap.data!["phiVanChuyen"])),
+                          ],
+                        ),
+                      ),
+                    ),
                     SizedBox(
                       height: 40,
                       child: Divider(
@@ -413,10 +490,16 @@ class _PickingDetailState extends State<PickingDetail> {
                     ElevatedButton(
                       onPressed: () async {
                         if (orderSnap.data!["nguoiNhanTraShip"] == false) {
-                          double t = orderSnap.data!["phiVanChuyen"];
-                          tookImg ? confirmPickup(t) : takePhoto();
+                          double t = double.parse(
+                              orderSnap.data!["phiVanChuyen"].toString());
+                          tookImg
+                              ? confirmPickup(total(currentTotal, t))
+                              : takePhoto();
+                        } else {
+                          tookImg
+                              ? confirmPickup(total(currentTotal, 0))
+                              : takePhoto();
                         }
-                        tookImg ? confirmPickup(0) : takePhoto();
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: MColors.background,
